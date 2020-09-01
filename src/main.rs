@@ -1,18 +1,17 @@
 extern crate clap;
-use clap::{Arg, App, SubCommand};
 use chrono::DateTime;
+use clap::{App, Arg, SubCommand};
 use frontmatter;
 use glob::glob;
 use serde::{de, Deserialize, Deserializer, Serialize};
-use std::{fmt, fs, io, path::Path, env};
 use std::marker::PhantomData;
+use std::{fmt, fs, io, path::Path};
 use unwrap::unwrap;
 extern crate yaml_rust;
 use tantivy::collector::TopDocs;
 use tantivy::query::QueryParser;
 use tantivy::schema::*;
 use tantivy::{doc, Index, ReloadPolicy};
-//use tempfile::TempDir;
 use yaml_rust::YamlEmitter;
 extern crate shellexpand;
 
@@ -66,30 +65,36 @@ fn main() -> tantivy::Result<()> {
     let default_index_dir = shellexpand::tilde("~/.config/zkfm/");
 
     let matches = App::new("zkfm")
-                      .version("1.0")
-                      .author("Steve <steve@little-fluffy.cloud>")
-                      .about("Zettlekasten-inspired Markdown+FrontMatter Indexer and query tool")
-                      .arg(Arg::with_name("index_path")
-                           .short("i")
-                           .value_name("DIRECTORY")
-                           .help("Set the directory to store Tantivy index data")
-                           .default_value(&default_index_dir)
-                           .takes_value(true))
-                      .arg(Arg::with_name("source")
-                           .short("s")
-                           .long("source")
-                           .value_name("DIRECTORY")
-                           .help("Set the source directory containing Markdown docs with Frontmatter")
-                           .takes_value(true))
-                      .subcommand(SubCommand::with_name("index")
-                                  .about("Load data from a source directory")
-                                  .arg(Arg::with_name("source")
-                                      .help("print debug information verbosely")))
-                      .subcommand(SubCommand::with_name("query")
-                                  .about("Query the index")
-                                  .arg(Arg::with_name("query")
-                                      .help("print debug information verbosely")))
-                      .get_matches();
+        .version("1.0")
+        .author("Steve <steve@little-fluffy.cloud>")
+        .about("Zettlekasten-inspired Markdown+FrontMatter Indexer and query tool")
+        .arg(
+            Arg::with_name("index_path")
+                .short("i")
+                .value_name("DIRECTORY")
+                .help("Set the directory to store Tantivy index data")
+                .default_value(&default_index_dir)
+                .takes_value(true),
+        )
+        .arg(
+            Arg::with_name("source")
+                .short("s")
+                .long("source")
+                .value_name("DIRECTORY")
+                .help("Set the source directory containing Markdown docs with Frontmatter")
+                .takes_value(true),
+        )
+        .subcommand(
+            SubCommand::with_name("index")
+                .about("Load data from a source directory")
+                .arg(Arg::with_name("source").help("print debug information verbosely")),
+        )
+        .subcommand(
+            SubCommand::with_name("query")
+                .about("Query the index")
+                .arg(Arg::with_name("query").help("print debug information verbosely")),
+        )
+        .get_matches();
 
     let index_path = matches.value_of("index_path").unwrap();
 
@@ -156,7 +161,8 @@ fn main() -> tantivy::Result<()> {
 
         let searcher = reader.searcher();
 
-        let query_parser = QueryParser::for_index(&index, vec![author, body, filename, tags, title]);
+        let query_parser =
+            QueryParser::for_index(&index, vec![author, body, filename, tags, title]);
 
         //let query = query_parser.parse_query("vim")?;
         //let query = query_parser.parse_query("tags:kubernetes")?;
