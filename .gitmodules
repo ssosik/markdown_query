@@ -1,0 +1,3 @@
+[submodule "xapian-rusty"]
+	path = xapian-rusty
+	url = git@github.com:ssosik/xapian-rusty.git

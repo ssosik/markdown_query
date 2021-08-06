@@ -6,3 +6,5 @@
 **/*.rs.bk
 
 *.swp
+xapian-core-*
+zlib-*
