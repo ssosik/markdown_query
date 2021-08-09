@@ -1,38 +1,36 @@
-mod xq_document;
 mod tui_app;
 mod util;
 mod xapian_utils;
+mod xq_document;
 
-use crate::xq_document::{parse_file, XqDocument};
 use crate::util::glob_files;
-use clap::{App, Arg, ArgMatches, SubCommand};
+use crate::xq_document::{parse_file, XqDocument};
+use clap::{App, Arg, SubCommand};
 use color_eyre::Report;
-use xapian_rusty::{Document, Stem, TermGenerator, WritableDatabase, BRASS, DB_CREATE_OR_OPEN};
+use dirs::home_dir;
+use xapian_rusty::{
+    Database, Document, Stem, TermGenerator, WritableDatabase, BRASS, DB_CREATE_OR_OPEN,
+};
 
-fn setup<'a>(default_config_file: &str) -> Result<ArgMatches, Report> {
+fn setup() -> Result<(), Report> {
     if std::env::var("RUST_LIB_BACKTRACE").is_err() {
         std::env::set_var("RUST_LIB_BACKTRACE", "1")
     }
     color_eyre::install()?;
 
+    Ok(())
+}
+
+fn main() -> Result<(), Report> {
+    setup()?;
+
+    let mut db_path = home_dir().unwrap();
+    db_path.push(".xq-data");
+
     let cli = App::new("xq")
         .version("1.0")
         .author("Steve <steve@little-fluffy.cloud>")
-        .about("Things I Know About: Zettlekasten-like Markdown+FrontMatter Indexer and query tool")
-        .arg(
-            Arg::with_name("config")
-                .short("c")
-                .value_name("FILE")
-                .help(
-                    format!(
-                        "Point to a config TOML file, defaults to `{}`",
-                        default_config_file
-                    )
-                    .as_str(),
-                )
-                .default_value(&default_config_file)
-                .takes_value(true),
-        )
+        .about("xq: Zettlekasten-like Markdown+FrontMatter Indexer and query tool")
         .arg(
             Arg::with_name("v")
                 .short("v")
@@ -40,44 +38,41 @@ fn setup<'a>(default_config_file: &str) -> Result<ArgMatches, Report> {
                 .help("Sets the level of verbosity"),
         )
         .arg(
-            Arg::with_name("update-index")
-                .short("i")
-                .help("Index data rather than querying the DB"),
+            Arg::with_name("db-path")
+                .help("Specify where to write the DB to")
+                .default_value(db_path.to_str().unwrap()),
         )
-        .arg(
-            Arg::with_name("source")
-                .short("s")
-                .value_name("DIRECTORY")
-                .help("Glob path to markdown files to load")
-                .takes_value(true),
+        .subcommand(
+            SubCommand::with_name("update")
+                .about("Specify a path/glob pattern of matching files to index")
+                .arg(
+                    Arg::with_name("globpath") // And their own arguments
+                        .help("the files to add")
+                        .required(true),
+                ),
         )
         .subcommand(
             SubCommand::with_name("query")
-                .about("Query the index")
+                .about("Specify a starting query for interactive query mode")
                 .arg(Arg::with_name("query").required(true).help("Query string")),
         )
         .get_matches();
 
     tui_app::setup_panic();
 
-    Ok(cli)
-}
-
-fn main() -> Result<(), Report> {
-    let default_config_file = shellexpand::tilde("~/.config/xq/xq.toml");
-    let cli = setup(&default_config_file)?;
+    let verbosity = cli.occurrences_of("v");
+    let db_path = cli.value_of("db-path").unwrap();
 
     // If requested, reindex the data
-    if cli.occurrences_of("update-index") > 0 {
-        let mut db = WritableDatabase::new("mydb", BRASS, DB_CREATE_OR_OPEN)?;
+    if let Some(cli) = cli.subcommand_matches("update") {
+        let mut db = WritableDatabase::new(db_path, BRASS, DB_CREATE_OR_OPEN)?;
         let mut tg = TermGenerator::new()?;
         let mut stemmer = Stem::new("en")?;
         tg.set_stemmer(&mut stemmer)?;
 
         // TODO is there a rustier way to do this?
         for entry in glob_files(
-            &cli.value_of("config").unwrap(),
-            cli.value_of("source"),
+            cli.value_of("globpath").unwrap(),
             cli.occurrences_of("v") as i8,
         )
         .expect("Failed to read glob pattern")
@@ -87,7 +82,7 @@ fn main() -> Result<(), Report> {
                 Ok(path) => {
                     if let Ok(xqdoc) = parse_file(&path) {
                         update_index(&mut db, &mut tg, &xqdoc)?;
-                        if cli.occurrences_of("v") > 0 {
+                        if verbosity > 0 {
                             println!("✅ {}", xqdoc.filename);
                         }
                     } else {
@@ -100,12 +95,14 @@ fn main() -> Result<(), Report> {
         }
 
         db.commit()?;
-    }
-
-    let mut iter = IntoIterator::into_iter(tui_app::interactive_query()?); // strings is moved here
-    while let Some(s) = iter.next() {
-        // next() moves a string out of the iter
-        println!("{}", s);
+    } else {
+        // Else, query the DB
+        let db = Database::new_with_path(db_path, DB_CREATE_OR_OPEN)?;
+        let mut iter = IntoIterator::into_iter(tui_app::interactive_query(db)?); // strings is moved here
+        while let Some(s) = iter.next() {
+            // next() moves a string out of the iter
+            println!("{}", s);
+        }
     }
 
     Ok(())

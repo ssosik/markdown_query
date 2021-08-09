@@ -1,29 +1,7 @@
 use glob::{glob, Paths};
-use std::{fs, io, io::Read, path::Path};
-use toml::Value as tomlVal;
+use std::path::Path;
 
-pub(crate) fn glob_files(
-    cfg_file: &str,
-    source: Option<&str>,
-    verbosity: i8,
-) -> Result<Paths, Box<dyn std::error::Error>> {
-    let cfg_fh = fs::OpenOptions::new()
-        .read(true)
-        .write(false)
-        .create(false)
-        .open(cfg_file)?;
-    let mut buf_reader = io::BufReader::new(cfg_fh);
-    let mut contents = String::new();
-    buf_reader.read_to_string(&mut contents)?;
-    let toml_contents = contents.parse::<tomlVal>().unwrap();
-
-    let source_glob = toml_contents
-        .get("source-glob")
-        .expect("Failed to find 'source-glob' heading in toml config")
-        .as_str()
-        .expect("Error taking source-glob value as string");
-
-    let source = source.unwrap_or(source_glob);
+pub(crate) fn glob_files(source: &str, verbosity: i8) -> Result<Paths, Box<dyn std::error::Error>> {
     let glob_path = Path::new(&source);
     let glob_str = shellexpand::tilde(glob_path.to_str().unwrap());
 

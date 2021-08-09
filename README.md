@@ -63,11 +63,13 @@ For now, clone this repo and run the makefile.
 # Usage
 
 ```
-# Index a source directory
-xq -i
+# Index a source directory, note the single quotes used here to prevent the
+# shell from expanding the wildcard here
+xq update '/path/to/files/*.md'
 
 # Run a query against an index
 xq
+xq query "some starting query"
 ```
 
 # Requirements

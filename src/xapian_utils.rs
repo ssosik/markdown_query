@@ -18,7 +18,7 @@ use xapian_rusty::FeatureFlag::{
     FlagBoolean, FlagBooleanAnyCase, FlagLovehate, FlagPartial, FlagPhrase, FlagPureNot,
     FlagSpellingCorrection, FlagWildcard,
 };
-use xapian_rusty::{Database, Query, QueryParser, Stem, XapianOp, DB_CREATE_OR_OVERWRITE};
+use xapian_rusty::{Enquire, Query, QueryParser, Stem, XapianOp};
 
 // The most helpful write-up on using Nom that I've seen so far:
 //   https://iximiuz.com/en/posts/rust-writing-parsers-with-nom/
@@ -691,10 +691,7 @@ named!(
 );
 
 //fn query_db(mut db: Database, mut q: Query) -> Result<Vec<XqDocument>, Report> {
-pub fn query_db(mut q: Query) -> Result<Vec<XqDocument>, Report> {
-    // TODO Reuse existing DB instead of creating a new one on each query
-    let mut db = Database::new_with_path("mydb", DB_CREATE_OR_OVERWRITE)?;
-    let mut enq = db.new_enquire()?;
+pub fn query_db(mut enq: Enquire, mut q: Query) -> Result<Vec<XqDocument>, Report> {
     enq.set_query(&mut q)?;
     // TODO set this based on terminal height?
     let mut mset = enq.get_mset(0, 100)?;

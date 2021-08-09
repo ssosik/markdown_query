@@ -1,6 +1,6 @@
-use crate::xq_document::XqDocument;
 use crate::util::event::{Event, Events};
 use crate::xapian_utils;
+use crate::xq_document::XqDocument;
 use color_eyre::Report;
 use std::io::{stdout, Write};
 use termion::{event::Key, raw::IntoRawMode, screen::AlternateScreen};
@@ -11,6 +11,7 @@ use tui::{
     text::{Span, Spans},
     widgets::{Block, Borders, List, ListItem, ListState, Paragraph, Wrap},
 };
+use xapian_rusty::Database;
 
 // Needed to provide `width()` method on String:
 // no method named `width` found for struct `std::string::String` in the current scope
@@ -110,8 +111,7 @@ pub fn setup_panic() {
 }
 
 /// Interactive query interface
-pub fn interactive_query() -> Result<Vec<String>, Report> {
-    // TODO create DB in main and pass it through to query_db
+pub fn interactive_query(mut db: Database) -> Result<Vec<String>, Report> {
     let mut tui = tui::Terminal::new(TermionBackend::new(AlternateScreen::from(
         stdout().into_raw_mode().unwrap(),
     )))
@@ -226,10 +226,11 @@ pub fn interactive_query() -> Result<Vec<String>, Report> {
             // Add a trailing ` ;` to the query to hint to Nom that it has a "full" string
             inp.push_str(&" ;");
 
+            let enq = db.new_enquire()?;
             match xapian_utils::parse_user_query(&inp) {
                 Ok(mut query) => {
                     app.query = query.get_description();
-                    app.matches = xapian_utils::query_db(query)?;
+                    app.matches = xapian_utils::query_db(enq, query)?;
                 }
                 Err(e) => {
                     app.errout = e.to_string();
