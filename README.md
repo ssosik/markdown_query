@@ -63,7 +63,7 @@ TODO update
 
 ```
 # Index a source directory
-DYLD_LIBRARY_PATH=xapian-core-1.4.17/.libs/ ./target/debug/tika -i
+./target/debug/tika -i
 
 # Run a query against an index
 ./target/debug/tika

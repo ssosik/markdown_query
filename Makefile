@@ -5,14 +5,26 @@ XPCOREVER = 1.4.17
 XPCORE = xapian-core-$(XPCOREVER)
 XPCOREZ = $(XPCORE).tar.xz
 
-build: $(ZLIB) $(XPCORE)/.libs
+build: target/debug/tika
+
+release: target/release/tika
+
+target/debug/tika: $(ZLIB) $(XPCORE)/.libs
 	cargo build
 
-test: $(ZLIB) $(XPCORE)/.libs
-	DYLD_LIBRARY_PATH=$(XPCORE)/.libs cargo test
+target/release/tika: $(ZLIB) $(XPCORE)/.libs
+	cargo build --release
+
+test:
+	cargo test
 
 run: $(ZLIB) $(XPCORE)/.libs
-	DYLD_LIBRARY_PATH=$(XPCORE)/.libs cargo run
+	cargo run
+
+clean:
+	rm -rf $(ZLIB)
+	rm -rf $(XPCORE)
+	cargo clean
 
 # Fetch dependencies
 $(ZLIBZ):
@@ -24,7 +36,7 @@ $(XPCOREZ):
 $(ZLIB): $(ZLIBZ)
 	tar -xvzf $(ZLIBZ)
 	cd $(ZLIB) \
-		&& ./configure \
+		&& ./configure --static \
 		&& $(MAKE)
 
 $(XPCORE): $(XPCOREZ)
@@ -36,9 +48,5 @@ $(XPCORE)/.libs: $(ZLIB) $(XPCORE)
 	cp omenquire.cc $(XPCORE)/api/
 	# Build it
 	cd $(XPCORE) \
-		&& ./configure CPPFLAGS=-I../$(ZLIB) LDFLAGS=-L../$(ZLIB) \
+		&& ./configure --enable-static CPPFLAGS=-I../$(ZLIB) LDFLAGS=-L../$(ZLIB) \
 		&& $(MAKE)
-
-clean:
-	rm -rf $(XPCORE)
-	cargo clean
