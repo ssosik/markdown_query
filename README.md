@@ -1,38 +1,52 @@
-# tika
+# Xapian-Query-CLI: xq
 
-Things I Know About - A Minimal [Zettelkasten](https://zettelkasten.de/posts/overview/#principles)-inspired Markdown+FrontMatter document indexer and query interface.
+A local text file Xapian indexer and query tool. Original effort was focused on
+building a minimal
+[Zettelkasten](https://zettelkasten.de/posts/overview/#principles)-like
+Markdown+FrontMatter document indexer and query interface: Keep lots of small
+notes and then quickly find them again using Information Retrival-style natural
+language queries.
 
-Keep lots of small notes and then quickly find them again using Information
-Retrival-style natural language queries.
+Inspired by [vimwiki](https://github.com/vimwiki/vimwiki).
+
+After being focused on my personal notes in Markdown+Frontmatter format, I
+realized this could be useful for indexing other bodies of text on a local
+filesystem, such as man/info pages. TODO
 
 # About
 
 I originally implemented this as a Vim plugin using some Python code built
-around [Xapian](https://xapian.org/).
+around [Xapian](https://xapian.org/), called
+[tika](https://github.com/ssosik/tika). I decided to rewrite this in Rust, and
+after exploring other options for Information Retrieval based search tools like
+Tantivy and Fuzzy-Finder, I went back to Xapian: it's the best.
 
 # Note
 
-This is my first Rust project, the code here is probably not ideal.
+This is my first Rust project, I welcome any comments/PRs/issues related to
+improving the code here.
+
+There's still a lot I'd like to do here, but this version should at least be
+usable.
 
 # TODOs
 
 * [x] Add tests
+* [x] Query/filter on tags (make sure this is working properly)
+* [x] statically link xapian-core
 * [ ] Delete entries from local cache
 * [ ] Query/filter on time range
-* [ ] timestamp ranges
-* [x] Query/filter on tags (make sure this is working properly)
-* [ ] Update README
 * [ ] Vim Plugin
+* [ ] TUI start list at the bottom instead of the top
 * [ ] TUI select many
 * [ ] searching/jumping-to/highlighting in preview
 * [ ] pageup/down; ctrl-w
-* [ ] TUI start list at the bottom instead of the top
-* [ ] Cache MD5 hashes of files using `kv` to skip indexing unchanged files
-* [ ] Keep track of access count in KV
-* [ ] Keep track of all Tags used for autocompletion
+* [ ] Cache MD5 hashes of files using [kv](https://docs.rs/kv/0.22.0/kv/) to
+    skip indexing unchanged files
+* [ ] Keep track of document access count in KV and use that as a weighting
+    factor in query results
+* [ ] Keep track of all Tags to be used for autocompletion
 * [ ] cleanups, refactoring, rust-analyze, clippy and linting
-* [ ] statically link xapian-core
-* [ ] fix all gratuitus allows and unused imports
 * [ ] CLI option for passing in starting query for interactive mode
 * [ ] CLI option to emit JSON instead of filename
 * [ ] import man/info pages and other canonical documentation for indexing and IR
