@@ -5,14 +5,14 @@ XPCOREVER = 1.4.17
 XPCORE = xapian-core-$(XPCOREVER)
 XPCOREZ = $(XPCORE).tar.xz
 
-build: target/debug/tika
+build: target/debug/xq
 
-release: target/release/tika
+release: target/release/xq
 
-target/debug/tika: $(ZLIB) $(XPCORE)/.libs
+target/debug/xq: $(ZLIB) $(XPCORE)/.libs
 	cargo build
 
-target/release/tika: $(ZLIB) $(XPCORE)/.libs
+target/release/xq: $(ZLIB) $(XPCORE)/.libs
 	cargo build --release
 
 test:

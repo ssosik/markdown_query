@@ -63,10 +63,10 @@ TODO update
 
 ```
 # Index a source directory
-./target/debug/tika -i
+xq -i
 
 # Run a query against an index
-./target/debug/tika
+xq
 ```
 
 # Requirements

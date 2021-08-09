@@ -18,7 +18,7 @@ use yaml_rust::YamlEmitter;
 /// Some note here formatted with Markdown syntax
 ///
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
-pub struct TikaDocument {
+pub struct XqDocument {
     /// Inherent metadata about the document
     #[serde(default)]
     pub filename: String,
@@ -44,7 +44,7 @@ pub struct TikaDocument {
     pub body: String,
 }
 
-impl TikaDocument {
+impl XqDocument {
     pub(crate) fn date_str(&self) -> Result<String, Report> {
         if let Ok(t) = self.parse_date() {
             let ret = t.with_timezone(&chrono::Utc).to_rfc3339();
@@ -99,7 +99,7 @@ where
     deserializer.deserialize_any(StringOrVec(PhantomData))
 }
 
-pub(crate) fn parse_file(path: &std::path::PathBuf) -> Result<TikaDocument, io::Error> {
+pub(crate) fn parse_file(path: &std::path::PathBuf) -> Result<XqDocument, io::Error> {
     let full_path = path.to_str().unwrap();
     let s = fs::read_to_string(full_path)?;
 
@@ -112,7 +112,7 @@ pub(crate) fn parse_file(path: &std::path::PathBuf) -> Result<TikaDocument, io::
                 emitter.dump(&yaml).unwrap(); // dump the YAML object to a String
             }
 
-            let mut doc: TikaDocument = serde_yaml::from_str(&out_str).unwrap();
+            let mut doc: XqDocument = serde_yaml::from_str(&out_str).unwrap();
             // TODO Is this check necessary?
             if doc.filename == *"" {
                 doc.filename = String::from(path.file_name().unwrap().to_str().unwrap());
