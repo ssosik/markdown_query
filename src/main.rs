@@ -1,9 +1,9 @@
-mod tika_document;
+mod xq_document;
 mod tui_app;
 mod util;
 mod xapian_utils;
 
-use crate::tika_document::{parse_file, TikaDocument};
+use crate::xq_document::{parse_file, XqDocument};
 use crate::util::glob_files;
 use clap::{App, Arg, ArgMatches, SubCommand};
 use color_eyre::Report;
@@ -15,7 +15,7 @@ fn setup<'a>(default_config_file: &str) -> Result<ArgMatches, Report> {
     }
     color_eyre::install()?;
 
-    let cli = App::new("tika")
+    let cli = App::new("xq")
         .version("1.0")
         .author("Steve <steve@little-fluffy.cloud>")
         .about("Things I Know About: Zettlekasten-like Markdown+FrontMatter Indexer and query tool")
@@ -64,7 +64,7 @@ fn setup<'a>(default_config_file: &str) -> Result<ArgMatches, Report> {
 }
 
 fn main() -> Result<(), Report> {
-    let default_config_file = shellexpand::tilde("~/.config/tika/tika.toml");
+    let default_config_file = shellexpand::tilde("~/.config/xq/xq.toml");
     let cli = setup(&default_config_file)?;
 
     // If requested, reindex the data
@@ -85,10 +85,10 @@ fn main() -> Result<(), Report> {
             match entry {
                 // TODO convert this to iterator style using map/filter
                 Ok(path) => {
-                    if let Ok(tikadoc) = parse_file(&path) {
-                        update_index(&mut db, &mut tg, &tikadoc)?;
+                    if let Ok(xqdoc) = parse_file(&path) {
+                        update_index(&mut db, &mut tg, &xqdoc)?;
                         if cli.occurrences_of("v") > 0 {
-                            println!("✅ {}", tikadoc.filename);
+                            println!("✅ {}", xqdoc.filename);
                         }
                     } else {
                         eprintln!("❌ Failed to load file {}", path.display());
@@ -114,28 +114,28 @@ fn main() -> Result<(), Report> {
 fn update_index(
     db: &mut WritableDatabase,
     tg: &mut TermGenerator,
-    tikadoc: &TikaDocument,
+    xqdoc: &XqDocument,
 ) -> Result<(), Report> {
-    // Create a new Xapian Document to store attributes on the passed-in TikaDocument
+    // Create a new Xapian Document to store attributes on the passed-in XqDocument
     let mut doc = Document::new()?;
     tg.set_document(&mut doc)?;
 
-    tg.index_text_with_prefix(&tikadoc.author, "A")?;
-    tg.index_text_with_prefix(&tikadoc.date_str()?, "D")?;
-    tg.index_text_with_prefix(&tikadoc.filename, "F")?;
-    tg.index_text_with_prefix(&tikadoc.full_path.clone().into_string().unwrap(), "F")?;
-    tg.index_text_with_prefix(&tikadoc.title, "S")?;
-    tg.index_text_with_prefix(&tikadoc.subtitle, "XS")?;
-    for tag in &tikadoc.tags {
+    tg.index_text_with_prefix(&xqdoc.author, "A")?;
+    tg.index_text_with_prefix(&xqdoc.date_str()?, "D")?;
+    tg.index_text_with_prefix(&xqdoc.filename, "F")?;
+    tg.index_text_with_prefix(&xqdoc.full_path.clone().into_string().unwrap(), "F")?;
+    tg.index_text_with_prefix(&xqdoc.title, "S")?;
+    tg.index_text_with_prefix(&xqdoc.subtitle, "XS")?;
+    for tag in &xqdoc.tags {
         tg.index_text_with_prefix(&tag, "K")?;
     }
 
-    tg.index_text(&tikadoc.body)?;
+    tg.index_text(&xqdoc.body)?;
 
-    // Convert the TikaDocument into JSON and set it in the DB for retrieval later
-    doc.set_data(&serde_json::to_string(&tikadoc).unwrap())?;
+    // Convert the XqDocument into JSON and set it in the DB for retrieval later
+    doc.set_data(&serde_json::to_string(&xqdoc).unwrap())?;
 
-    let id = "Q".to_owned() + &tikadoc.filename;
+    let id = "Q".to_owned() + &xqdoc.filename;
     doc.add_boolean_term(&id)?;
     db.replace_document(&id, &mut doc)?;
 

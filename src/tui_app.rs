@@ -1,4 +1,4 @@
-use crate::tika_document::TikaDocument;
+use crate::xq_document::XqDocument;
 use crate::util::event::{Event, Events};
 use crate::xapian_utils;
 use color_eyre::Report;
@@ -23,7 +23,7 @@ pub(crate) struct TerminalApp {
     /// Preview window
     pub(crate) output: String,
     /// Query Matches
-    pub(crate) matches: Vec<TikaDocument>,
+    pub(crate) matches: Vec<XqDocument>,
     /// Keep track of which matches are selected
     pub(crate) state: ListState,
     /// Report query parsing errors back to the user

@@ -1,4 +1,4 @@
-use crate::tika_document::TikaDocument;
+use crate::xq_document::XqDocument;
 use color_eyre::Report;
 use eyre::{eyre, Result};
 #[allow(unused)]
@@ -690,8 +690,8 @@ named!(
     )
 );
 
-//fn query_db(mut db: Database, mut q: Query) -> Result<Vec<TikaDocument>, Report> {
-pub fn query_db(mut q: Query) -> Result<Vec<TikaDocument>, Report> {
+//fn query_db(mut db: Database, mut q: Query) -> Result<Vec<XqDocument>, Report> {
+pub fn query_db(mut q: Query) -> Result<Vec<XqDocument>, Report> {
     // TODO Reuse existing DB instead of creating a new one on each query
     let mut db = Database::new_with_path("mydb", DB_CREATE_OR_OVERWRITE)?;
     let mut enq = db.new_enquire()?;
@@ -709,7 +709,7 @@ pub fn query_db(mut q: Query) -> Result<Vec<TikaDocument>, Report> {
         let res = v.get_document_data();
         // Can use flatten() or some other iterators/combinators?
         if let Ok(data) = res {
-            let v: TikaDocument = serde_json::from_str(&data)?;
+            let v: XqDocument = serde_json::from_str(&data)?;
             //println!("Match {}", v.filename);
             matches.push(v);
         }
