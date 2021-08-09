@@ -5,6 +5,8 @@ XPCOREVER = 1.4.17
 XPCORE = xapian-core-$(XPCOREVER)
 XPCOREZ = $(XPCORE).tar.xz
 
+.PHONY: build release clean target/debug/xq target/release/xq
+
 build: target/debug/xq
 
 release: target/release/xq
