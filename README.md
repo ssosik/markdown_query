@@ -15,6 +15,9 @@ filesystem, such as man/info pages. TODO
 
 # About
 
+How do you do personal notes? Grepping through a folder full of notes isn't the
+most effective way to do; using Xapian is a better way.
+
 I originally implemented this as a Vim plugin using some Python code built
 around [Xapian](https://xapian.org/), called
 [tika](https://github.com/ssosik/tika). I decided to rewrite this in Rust, and
@@ -55,11 +58,9 @@ usable.
 
 # Installation
 
-TODO
+For now, clone this repo and run the makefile.
 
 # Usage
-
-TODO update
 
 ```
 # Index a source directory
@@ -82,8 +83,8 @@ Any modern standard Rust installation should probably work.
 I use [NixOS](https://nixos.org/) along with [Direnv](https://direnv.net/) and [Direnv Nix Integration](https://github.com/direnv/direnv/wiki/Nix)
 
 ```bash
-git clone https://github.com/ssosik/tika
-cd tika
+git clone --recurse-submodules git@github.com:ssosik/xapian-query-cli.git
+cd xapian-query-cli
 direnv allow
 # Wait some time for Nix to install all of the Rust tooling
 rustup install stable
