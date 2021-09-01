@@ -1,17 +1,13 @@
 # Xapian-Query-CLI: xq
 
-A local text file Xapian indexer and query tool. Original effort was focused on
-building a minimal
+A local text file Xapian indexer and query tool. Started life as a minimal
 [Zettelkasten](https://zettelkasten.de/posts/overview/#principles)-like
 Markdown+FrontMatter document indexer and query interface: Keep lots of small
 notes and then quickly find them again using Information Retrival-style natural
 language queries.
 
-Inspired by [vimwiki](https://github.com/vimwiki/vimwiki).
-
-After being focused on my personal notes in Markdown+Frontmatter format, I
-realized this could be useful for indexing other bodies of text on a local
-filesystem, such as man/info pages. TODO
+I would like to extend this to index other bodies of text on a local filesystem,
+such as man/info pages. TODO
 
 # About
 
@@ -77,6 +73,16 @@ xq query "some starting query"
 lightly patched version of xapian-rusty, included here as a submodule.
 
 zlib and xapian-core, which are bundled here.
+
+To get started in a ubuntu-18.04 docker image:
+```bash
+apt-get update --yes
+apt-get upgrade --yes
+apt-get install --yes build-essential git
+git clone --recurse-submodules https://github.com/ssosik/xapian-query-cli.git
+cd xapian-query-cli
+make
+```
 
 # Development
 
