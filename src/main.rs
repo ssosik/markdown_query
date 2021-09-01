@@ -98,8 +98,8 @@ fn main() -> Result<(), Report> {
     } else {
         // Else, query the DB
         let db = Database::new_with_path(db_path, DB_CREATE_OR_OPEN)?;
-        let mut iter = IntoIterator::into_iter(tui_app::interactive_query(db)?); // strings is moved here
-        while let Some(s) = iter.next() {
+        let iter = IntoIterator::into_iter(tui_app::interactive_query(db)?); // strings is moved here
+        for s in iter {
             // next() moves a string out of the iter
             println!("{}", s);
         }
@@ -124,7 +124,7 @@ fn update_index(
     tg.index_text_with_prefix(&xqdoc.title, "S")?;
     tg.index_text_with_prefix(&xqdoc.subtitle, "XS")?;
     for tag in &xqdoc.tags {
-        tg.index_text_with_prefix(&tag, "K")?;
+        tg.index_text_with_prefix(tag, "K")?;
     }
 
     tg.index_text(&xqdoc.body)?;

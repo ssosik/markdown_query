@@ -130,7 +130,7 @@ mod matchop_tests {
     use super::*;
     #[test]
     fn test1() {
-        let (rest, op) = matchop("AND\n").expect("Failed to match Op");
+        let (_rest, _op) = matchop("AND\n").expect("Failed to match Op");
     }
 }
 
@@ -208,17 +208,17 @@ mod word_tests {
 
     #[test]
     fn one_word_with_trailing_space() {
-        ExpectedParseResult::new(&"foo", 0, 1, 1, &" ", 3, 1, 4).compare(&word, &r#"foo "#)
+        ExpectedParseResult::new("foo", 0, 1, 1, " ", 3, 1, 4).compare(&word, r#"foo "#)
     }
 
     #[test]
     fn one_word_with_trailing_newline() {
-        ExpectedParseResult::new(&"foo", 0, 1, 1, &"\\n", 3, 1, 4).compare(&word, &r#"foo\n"#)
+        ExpectedParseResult::new("foo", 0, 1, 1, "\\n", 3, 1, 4).compare(&word, r#"foo\n"#)
     }
 
     #[test]
     fn two_space_separated_words() {
-        ExpectedParseResult::new(&"foo", 0, 1, 1, &" bar", 3, 1, 4).compare(&word, &r#"foo bar"#)
+        ExpectedParseResult::new("foo", 0, 1, 1, " bar", 3, 1, 4).compare(&word, r#"foo bar"#)
     }
 }
 
@@ -236,13 +236,13 @@ mod words_tests {
 
     #[test]
     fn one_word() {
-        ExpectedParseResult::new(&"foo", 0, 1, 1, &"\\n", 3, 1, 4).compare(&words, &r#"foo\n"#)
+        ExpectedParseResult::new("foo", 0, 1, 1, "\\n", 3, 1, 4).compare(&words, r#"foo\n"#)
     }
 
     #[test]
     fn two_space_separated_words() {
-        ExpectedParseResult::new(&"foo bar", 0, 1, 1, &"\\n", 7, 1, 8)
-            .compare(&words, &r#"foo bar\n"#)
+        ExpectedParseResult::new("foo bar", 0, 1, 1, "\\n", 7, 1, 8)
+            .compare(&words, r#"foo bar\n"#)
     }
 }
 
@@ -266,34 +266,34 @@ mod quoted_tests {
     use super::*;
     #[test]
     fn one_word_no_trailing_space() {
-        ExpectedParseResult::new(&"\"foo\"", 0, 1, 1, &"", 5, 1, 6).compare(&quoted, &r#""foo""#)
+        ExpectedParseResult::new("\"foo\"", 0, 1, 1, "", 5, 1, 6).compare(&quoted, r#""foo""#)
     }
 
     #[test]
     fn one_word_with_trailing_space() {
-        ExpectedParseResult::new(&"\"foo \"", 0, 1, 1, &"", 6, 1, 7).compare(&quoted, &r#""foo ""#)
+        ExpectedParseResult::new("\"foo \"", 0, 1, 1, "", 6, 1, 7).compare(&quoted, r#""foo ""#)
     }
 
     #[test]
     fn two_words() {
-        ExpectedParseResult::new(&"\"foo bar\"", 0, 1, 1, &"", 9, 1, 10)
-            .compare(&quoted, &r#""foo bar""#)
+        ExpectedParseResult::new("\"foo bar\"", 0, 1, 1, "", 9, 1, 10)
+            .compare(&quoted, r#""foo bar""#)
     }
 
     #[test]
     fn single_quote_one_word_no_trailing_space() {
-        ExpectedParseResult::new(&"\'foo\'", 0, 1, 1, &"", 5, 1, 6).compare(&quoted, &r#"'foo'"#)
+        ExpectedParseResult::new("\'foo\'", 0, 1, 1, "", 5, 1, 6).compare(&quoted, r#"'foo'"#)
     }
 
     #[test]
     fn single_quote_one_word_with_trailing_space() {
-        ExpectedParseResult::new(&"\'foo \'", 0, 1, 1, &"", 6, 1, 7).compare(&quoted, &r#"'foo '"#)
+        ExpectedParseResult::new("\'foo \'", 0, 1, 1, "", 6, 1, 7).compare(&quoted, r#"'foo '"#)
     }
 
     #[test]
     fn single_quote_two_words() {
-        ExpectedParseResult::new(&"\'foo bar\'", 0, 1, 1, &"", 9, 1, 10)
-            .compare(&quoted, &r#"'foo bar'"#)
+        ExpectedParseResult::new("\'foo bar\'", 0, 1, 1, "", 9, 1, 10)
+            .compare(&quoted, r#"'foo bar'"#)
     }
 
     #[test]
@@ -323,26 +323,26 @@ mod tagged_tests {
 
     #[test]
     fn one_word_with_trailing_space() {
-        ExpectedParseResult::new(&"foo:bar", 0, 1, 1, &"\\n", 7, 1, 8)
-            .compare(&tagged, &r#"foo:bar\n"#)
+        ExpectedParseResult::new("foo:bar", 0, 1, 1, "\\n", 7, 1, 8)
+            .compare(&tagged, r#"foo:bar\n"#)
     }
 
     #[test]
     fn two_words() {
-        ExpectedParseResult::new(&"tag:foo ", 0, 1, 1, &"bar", 8, 1, 9)
-            .compare(&tagged, &r#"tag:foo bar"#)
+        ExpectedParseResult::new("tag:foo ", 0, 1, 1, "bar", 8, 1, 9)
+            .compare(&tagged, r#"tag:foo bar"#)
     }
 
     #[test]
     fn two_words_single_quoted() {
-        ExpectedParseResult::new(&"tag:\'foo bar\'", 0, 1, 1, &"\\n", 13, 1, 14)
-            .compare(&tagged, &r#"tag:'foo bar'\n"#)
+        ExpectedParseResult::new("tag:\'foo bar\'", 0, 1, 1, "\\n", 13, 1, 14)
+            .compare(&tagged, r#"tag:'foo bar'\n"#)
     }
 
     #[test]
     fn two_words_double_quoted() {
-        ExpectedParseResult::new(&"tag:\"foo bar\"", 0, 1, 1, &"\\n", 13, 1, 14)
-            .compare(&tagged, &r#"tag:"foo bar"\n"#)
+        ExpectedParseResult::new("tag:\"foo bar\"", 0, 1, 1, "\\n", 13, 1, 14)
+            .compare(&tagged, r#"tag:"foo bar"\n"#)
     }
 
     #[test]
@@ -473,7 +473,7 @@ fn expression_into_query(mut qp: QueryParser, flags: i16, qstr: &str) -> Result<
 
     for token in matches {
         // Skip whitespace-only tokens
-        if let Ok(_) = whitespace(token) {
+        if whitespace(token).is_ok() {
             continue;
         }
 
@@ -619,7 +619,7 @@ pub fn parse_user_query(mut qstr: &str) -> Result<Query, Report> {
     }
 
     let mut depth = 0;
-    while qstr.len() > 0 {
+    while !qstr.is_empty() {
         depth += 1;
 
         // Take the next chunk up to the next operator and add it to the query

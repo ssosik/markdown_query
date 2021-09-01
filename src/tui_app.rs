@@ -94,7 +94,7 @@ impl Default for TerminalApp {
 }
 
 pub fn setup_panic() {
-    std::panic::set_hook(Box::new(move |x| {
+    std::panic::set_hook(Box::new(move |_x| {
         stdout()
             .into_raw_mode()
             .unwrap()
@@ -106,7 +106,9 @@ pub fn setup_panic() {
             termion::screen::ToMainScreen
         )
         .unwrap();
-        write!(stdout(), "{:?}", x).unwrap();
+        // Clippy removed this line in favor of the println!("") below
+        //write!(stdout(), "{:?}", x).unwrap();
+        print!("");
     }));
 }
 
@@ -152,7 +154,7 @@ pub fn interactive_query(mut db: Database) -> Result<Vec<String>, Report> {
                 .matches
                 .iter()
                 .map(|m| {
-                    let content = vec![Spans::from(Span::raw(format!("{}", m.title)))];
+                    let content = vec![Spans::from(Span::raw(m.title.to_string()))];
                     ListItem::new(content)
                 })
                 .collect();
@@ -224,7 +226,7 @@ pub fn interactive_query(mut db: Database) -> Result<Vec<String>, Report> {
 
             let mut inp: String = app.input.to_owned();
             // Add a trailing ` ;` to the query to hint to Nom that it has a "full" string
-            inp.push_str(&" ;");
+            inp.push_str(" ;");
 
             let enq = db.new_enquire()?;
             match xapian_utils::parse_user_query(&inp) {

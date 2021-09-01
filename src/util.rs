@@ -9,7 +9,7 @@ pub(crate) fn glob_files(source: &str, verbosity: i8) -> Result<Paths, Box<dyn s
         println!("Sourcing Markdown documents matching : {}", glob_str);
     }
 
-    return Ok(glob(&glob_str).expect("Failed to read glob pattern"));
+    Ok(glob(&glob_str).expect("Failed to read glob pattern"))
 }
 
 pub(crate) mod event {
