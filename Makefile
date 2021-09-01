@@ -7,26 +7,32 @@ XPCOREZ = $(XPCORE).tar.xz
 
 .PHONY: build release clean target/debug/xq target/release/xq
 
+CARGO ?= cargo
+
 build: target/debug/xq
+
+tag:
+	git tag v`cargo metadata --format-version 1 | jq -r '.packages[] | select(.name =="xq") | .version'` && \
+		git push --tags
 
 release: target/release/xq
 
 target/debug/xq: $(ZLIB) $(XPCORE)/.libs
-	cargo build
+	$(CARGO) build $(TARGET_FLAGS)
 
 target/release/xq: $(ZLIB) $(XPCORE)/.libs
-	cargo build --release
+	$(CARGO) build --release $(TARGET_FLAGS)
 
 test:
-	cargo test
+	$(CARGO) test
 
 run: $(ZLIB) $(XPCORE)/.libs
-	cargo run
+	$(CARGO) run
 
 clean:
 	rm -rf $(ZLIB)
 	rm -rf $(XPCORE)
-	cargo clean
+	$(CARGO) clean
 
 # Fetch dependencies
 $(ZLIBZ):
@@ -50,5 +56,5 @@ $(XPCORE)/.libs: $(ZLIB) $(XPCORE)
 	cp omenquire.cc $(XPCORE)/api/
 	# Build it
 	cd $(XPCORE) \
-		&& ./configure --enable-static CPPFLAGS=-I../$(ZLIB) LDFLAGS=-L../$(ZLIB) \
+		&& ./configure --enable-static --disable-shared CPPFLAGS=-I../$(ZLIB) LDFLAGS=-L../$(ZLIB) \
 		&& $(MAKE)
