@@ -10,7 +10,36 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
+  delete_prior_unstable_release:
+    name: Delete previous unstable release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete old release
+        uses: larryjoelane/delete-release-action@v1.0.24
+        with:
+          token: ${{ github.token }}
+          release-name: unstable
+
+  create_release:
+    needs: delete_prior_unstable_release # Make sure previous is deleted
+    name: Create release
+    runs-on: ubuntu-latest
+    outputs:
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+    steps:
+      - name: Create GitHub release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: unstable
+          release_name: unstable
+          draft: false
+          prerelease: true
+
   build:
+    needs: create_release # we need to know the upload URL
     runs-on: ${{ matrix.os }}
     strategy:
       # Adapted from https://github.com/BurntSushi/ripgrep/blob/master/.github/workflows/release.yml
@@ -74,14 +103,14 @@ jobs:
         echo "CARGO=cross" >> $GITHUB_ENV
         echo "TARGET_FLAGS=--target ${{ matrix.target }}" >> $GITHUB_ENV
 
-    - name: Build
+    - name: Build binary
       run: make release
 
     - name: Strip release binary (linux and macos)
       if: matrix.build == 'linux' || matrix.build == 'macos'
       run: strip "target/${{ matrix.target }}/release/xq"
 
-    - name: Build archive
+    - name: Build asset
       shell: bash
       run: |
         staging="xq-${{ env.XQ_VERSION }}-${{ matrix.target }}"
@@ -90,29 +119,20 @@ jobs:
         tar czf "$staging.tar.gz" "$staging"
         echo "ASSET=$staging.tar.gz" >> $GITHUB_ENV
 
-    - name: Get GitHub release
-      # test
-      id: get_release
-      uses: cardinalby/git-get-release-action@v1.1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        releaseName: 'unstable'
-
-    - name: Delete old release asset
-      uses: mknejp/delete-release-assets@v1
-      with:
-        token: ${{ github.token }}
-        tag: unstable
-        assets: ${{ env.ASSET }}
-        fail-if-no-assets: false
+    #- name: Delete old release asset
+    #  uses: mknejp/delete-release-assets@v1
+    #  with:
+    #    token: ${{ github.token }}
+    #    tag: unstable
+    #    assets: ${{ env.ASSET }}
+    #    fail-if-no-assets: false
 
     - name: Upload release assets
       uses: actions/upload-release-asset@v1.0.1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        upload_url: ${{ steps.get_release.outputs.upload_url }}
+        upload_url: ${{ needs.create_release.outputs.upload_url }}
         asset_path: ${{ env.ASSET }}
         asset_name: ${{ env.ASSET }}
         asset_content_type: application/octet-stream
