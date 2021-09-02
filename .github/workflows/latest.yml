@@ -1,41 +1,38 @@
 name: Latest builds
 
 on:
-  push:
-    branches: [ '*' ]
   pull_request:
-    branches: [ main ]
+  push:
+    branches:
+    - main
 
 env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  create_release:
-    name: Create release
+  get_release:
+    name: Get release
     runs-on: ubuntu-latest
-    # Note this. We are going to use that in further jobs.
     outputs:
-      upload_url: ${{ steps.create_release.outputs.upload_url }}
+      upload_url: ${{ steps.get_release.outputs.upload_url }}
     steps:
-      - name: Create GitHub release
-        id: create_release
-        uses: actions/create-release@v1
+      - name: Get GitHub release
+        id: get_release
+        uses: cardinalby/git-get-release-action@v1.1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: latest
-          release_name: Latest
-          draft: true
-          prerelease: true
+          releaseName: 'unstable'
+
   build:
-    needs: create_release # we need to know the upload URL
+    needs: get_release
     runs-on: ${{ matrix.os }}
     strategy:
       # Adapted from https://github.com/BurntSushi/ripgrep/blob/master/.github/workflows/release.yml
       matrix:
-        build: [linux, macos]
+        build: [linux-gnu, macos]
         include:
-        - build: linux
+        - build: linux-gnu
           os: ubuntu-latest
           rust: nightly
           target: x86_64-unknown-linux-gnu
@@ -43,6 +40,15 @@ jobs:
           os: macos-latest
           rust: nightly
           target: x86_64-apple-darwin
+        ## These are currently not supported.
+        #- build: linux-arm
+        #  os: ubuntu-latest
+        #  rust: nightly
+        #  target: arm-unknown-linux-gnueabihf
+        #- build: linux-musl
+        #  os: ubuntu-latest
+        #  rust: nightly
+        #  target: x86_64-unknown-linux-musl
 
     steps:
     - name: Checkout repository and submodules
@@ -94,8 +100,8 @@ jobs:
       shell: bash
       run: |
         staging="xq-${{ env.XQ_VERSION }}-${{ matrix.target }}"
-        mkdir -p "$staging"
-        cp "target/${{ matrix.target }}/release/xq" "$staging/"
+        mkdir -p "$staging/bin"
+        cp "target/${{ matrix.target }}/release/xq" "$staging/bin/"
         tar czf "$staging.tar.gz" "$staging"
         echo "ASSET=$staging.tar.gz" >> $GITHUB_ENV
 
@@ -104,7 +110,7 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        upload_url: ${{ needs.create_release.outputs.upload_url }}
+        upload_url: ${{ needs.get_release.outputs.upload_url }}
         asset_path: ${{ env.ASSET }}
         asset_name: ${{ env.ASSET }}
         asset_content_type: application/octet-stream
