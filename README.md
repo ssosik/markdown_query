@@ -46,6 +46,11 @@ usable.
     factor in query results
 * [ ] Keep track of all Tags to be used for autocompletion
 * [ ] cleanups, refactoring, rust-analyze, clippy and linting
+* [ ] Optimize binary and compile times
+  * [ ] https://matklad.github.io//2021/09/04/fast-rust-builds.html
+  * [ ] https://pingcap.com/blog/rust-compilation-model-calamity
+  * [ ] https://doc.rust-lang.org/rustc/profile-guided-optimization.html
+* Prune dependencies: https://pingcap.com/blog/rust-compilation-model-calamity#recent-work-on-rust-compile-times
 * [ ] CLI option for passing in starting query for interactive mode
 * [ ] CLI option to emit JSON instead of filename
 * [ ] import man/info pages and other canonical documentation for indexing and IR
@@ -79,8 +84,8 @@ To get started in a ubuntu-18.04 docker image:
 apt-get update --yes
 apt-get upgrade --yes
 apt-get install --yes build-essential git
-git clone --recurse-submodules https://github.com/ssosik/xapian-query-cli.git
-cd xapian-query-cli
+git clone --recurse-submodules https://github.com/ssosik/xapiary.git
+cd xapiary
 make
 ```
 
@@ -91,8 +96,8 @@ Any modern standard Rust installation should probably work.
 I use [NixOS](https://nixos.org/) along with [Direnv](https://direnv.net/) and [Direnv Nix Integration](https://github.com/direnv/direnv/wiki/Nix)
 
 ```bash
-git clone --recurse-submodules git@github.com:ssosik/xapian-query-cli.git
-cd xapian-query-cli
+git clone --recurse-submodules git@github.com:ssosik/xapiary.git
+cd xapiary
 direnv allow
 # Wait some time for Nix to install all of the Rust tooling
 rustup install stable
