@@ -79,8 +79,8 @@ To get started in a ubuntu-18.04 docker image:
 apt-get update --yes
 apt-get upgrade --yes
 apt-get install --yes build-essential git
-git clone --recurse-submodules https://github.com/ssosik/xapian-query-cli.git
-cd xapian-query-cli
+git clone --recurse-submodules https://github.com/ssosik/xapiary.git
+cd xapiary
 make
 ```
 
@@ -91,8 +91,8 @@ Any modern standard Rust installation should probably work.
 I use [NixOS](https://nixos.org/) along with [Direnv](https://direnv.net/) and [Direnv Nix Integration](https://github.com/direnv/direnv/wiki/Nix)
 
 ```bash
-git clone --recurse-submodules git@github.com:ssosik/xapian-query-cli.git
-cd xapian-query-cli
+git clone --recurse-submodules git@github.com:ssosik/xapiary.git
+cd xapiary
 direnv allow
 # Wait some time for Nix to install all of the Rust tooling
 rustup install stable

@@ -2,9 +2,9 @@ use clap::{App, Arg, SubCommand};
 use color_eyre::Report;
 use dirs::home_dir;
 use xapian_rusty::{Database, Stem, TermGenerator, WritableDatabase, BRASS, DB_CREATE_OR_OPEN};
-use xq::tui_app;
-use xq::util::glob_files;
-use xq::xq_document::parse_file;
+use xapiary::tui_app;
+use xapiary::util::glob_files;
+use xapiary::xq_document::parse_file;
 
 fn setup() -> Result<(), Report> {
     if std::env::var("RUST_LIB_BACKTRACE").is_err() {
