@@ -12,7 +12,7 @@ CARGO ?= cargo
 build: target/debug/xq
 
 tag:
-	git tag v`cargo metadata --format-version 1 | jq -r '.packages[] | select(.name =="xq") | .version'` && \
+	git tag v`cargo metadata --format-version 1 | jq -r '.packages[] | select(.name =="xapiary") | .version'` && \
 		git push --tags
 
 release: target/release/xq
@@ -23,7 +23,7 @@ target/debug/xq: $(ZLIB) $(XPCORE)/.libs
 target/release/xq: $(ZLIB) $(XPCORE)/.libs
 	$(CARGO) build --release $(TARGET_FLAGS)
 
-test:
+test: $(ZLIB) $(XPCORE)/.libs
 	$(CARGO) test
 
 run: $(ZLIB) $(XPCORE)/.libs
