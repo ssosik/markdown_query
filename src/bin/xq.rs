@@ -1,16 +1,10 @@
-mod tui_app;
-mod util;
-mod xapian_utils;
-mod xq_document;
-
-use crate::util::glob_files;
-use crate::xq_document::{parse_file, XqDocument};
 use clap::{App, Arg, SubCommand};
 use color_eyre::Report;
 use dirs::home_dir;
-use xapian_rusty::{
-    Database, Document, Stem, TermGenerator, WritableDatabase, BRASS, DB_CREATE_OR_OPEN,
-};
+use xapian_rusty::{Database, Stem, TermGenerator, WritableDatabase, BRASS, DB_CREATE_OR_OPEN};
+use xq::tui_app;
+use xq::util::glob_files;
+use xq::xq_document::parse_file;
 
 fn setup() -> Result<(), Report> {
     if std::env::var("RUST_LIB_BACKTRACE").is_err() {
@@ -81,7 +75,7 @@ fn main() -> Result<(), Report> {
                 // TODO convert this to iterator style using map/filter
                 Ok(path) => {
                     if let Ok(xqdoc) = parse_file(&path) {
-                        update_index(&mut db, &mut tg, &xqdoc)?;
+                        xqdoc.update_index(&mut db, &mut tg)?;
                         if verbosity > 0 {
                             println!("✅ {}", xqdoc.filename);
                         }
@@ -104,37 +98,6 @@ fn main() -> Result<(), Report> {
             println!("{}", s);
         }
     }
-
-    Ok(())
-}
-
-fn update_index(
-    db: &mut WritableDatabase,
-    tg: &mut TermGenerator,
-    xqdoc: &XqDocument,
-) -> Result<(), Report> {
-    // Create a new Xapian Document to store attributes on the passed-in XqDocument
-    let mut doc = Document::new()?;
-    tg.set_document(&mut doc)?;
-
-    tg.index_text_with_prefix(&xqdoc.author, "A")?;
-    tg.index_text_with_prefix(&xqdoc.date_str()?, "D")?;
-    tg.index_text_with_prefix(&xqdoc.filename, "F")?;
-    tg.index_text_with_prefix(&xqdoc.full_path.clone().into_string().unwrap(), "F")?;
-    tg.index_text_with_prefix(&xqdoc.title, "S")?;
-    tg.index_text_with_prefix(&xqdoc.subtitle, "XS")?;
-    for tag in &xqdoc.tags {
-        tg.index_text_with_prefix(tag, "K")?;
-    }
-
-    tg.index_text(&xqdoc.body)?;
-
-    // Convert the XqDocument into JSON and set it in the DB for retrieval later
-    doc.set_data(&serde_json::to_string(&xqdoc).unwrap())?;
-
-    let id = "Q".to_owned() + &xqdoc.filename;
-    doc.add_boolean_term(&id)?;
-    db.replace_document(&id, &mut doc)?;
 
     Ok(())
 }

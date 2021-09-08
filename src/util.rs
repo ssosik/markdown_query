@@ -1,7 +1,7 @@
 use glob::{glob, Paths};
 use std::path::Path;
 
-pub(crate) fn glob_files(source: &str, verbosity: i8) -> Result<Paths, Box<dyn std::error::Error>> {
+pub fn glob_files(source: &str, verbosity: i8) -> Result<Paths, Box<dyn std::error::Error>> {
     let glob_path = Path::new(&source);
     let glob_str = shellexpand::tilde(glob_path.to_str().unwrap());
 

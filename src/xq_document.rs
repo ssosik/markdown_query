@@ -4,6 +4,7 @@ use eyre::{eyre, Result};
 use serde::{de, Deserialize, Deserializer, Serialize};
 use std::io::{Error, ErrorKind};
 use std::{ffi::OsString, fmt, fs, io, marker::PhantomData};
+use xapian_rusty::{Document, TermGenerator, WritableDatabase};
 use yaml_rust::YamlEmitter;
 
 /// Representation for a given Markdown + FrontMatter file; Example:
@@ -45,14 +46,27 @@ pub struct XqDocument {
 }
 
 impl XqDocument {
-    pub(crate) fn date_str(&self) -> Result<String, Report> {
+    pub fn new() -> Self {
+        XqDocument {
+            filename: String::from(""),
+            full_path: OsString::from(""),
+            author: String::from(""),
+            date: String::from(""),
+            tags: vec![],
+            title: String::from(""),
+            subtitle: String::from(""),
+            body: String::from(""),
+        }
+    }
+
+    pub fn date_str(&self) -> Result<String, Report> {
         if let Ok(t) = self.parse_date() {
             let ret = t.with_timezone(&chrono::Utc).to_rfc3339();
             return Ok(ret);
         }
         Err(eyre!("❌ Failed to convert path to date '{}'", &self.date))
     }
-    pub(crate) fn parse_date(&self) -> Result<DateTime<FixedOffset>, Report> {
+    pub fn parse_date(&self) -> Result<DateTime<FixedOffset>, Report> {
         if let Ok(rfc3339) = DateTime::parse_from_rfc3339(&self.date) {
             return Ok(rfc3339);
         } else if let Ok(s) = DateTime::parse_from_str(&self.date, &String::from("%Y-%m-%dT%T%z")) {
@@ -63,6 +77,37 @@ impl XqDocument {
             "❌ Failed to convert path to str '{}'",
             &self.filename
         ))
+    }
+
+    pub fn update_index(
+        &self,
+        db: &mut WritableDatabase,
+        tg: &mut TermGenerator,
+    ) -> Result<(), Report> {
+        // Create a new Xapian Document to store attributes on the passed-in XqDocument
+        let mut doc = Document::new()?;
+        tg.set_document(&mut doc)?;
+
+        tg.index_text_with_prefix(&self.author, "A")?;
+        tg.index_text_with_prefix(&self.date_str()?, "D")?;
+        tg.index_text_with_prefix(&self.filename, "F")?;
+        tg.index_text_with_prefix(&self.full_path.clone().into_string().unwrap(), "F")?;
+        tg.index_text_with_prefix(&self.title, "S")?;
+        tg.index_text_with_prefix(&self.subtitle, "XS")?;
+        for tag in &self.tags {
+            tg.index_text_with_prefix(tag, "K")?;
+        }
+
+        tg.index_text(&self.body)?;
+
+        // Convert the XqDocument into JSON and set it in the DB for retrieval later
+        doc.set_data(&serde_json::to_string(&self).unwrap())?;
+
+        let id = "Q".to_owned() + &self.filename;
+        doc.add_boolean_term(&id)?;
+        db.replace_document(&id, &mut doc)?;
+
+        Ok(())
     }
 }
 
@@ -99,7 +144,7 @@ where
     deserializer.deserialize_any(StringOrVec(PhantomData))
 }
 
-pub(crate) fn parse_file(path: &std::path::PathBuf) -> Result<XqDocument, io::Error> {
+pub fn parse_file(path: &std::path::PathBuf) -> Result<XqDocument, io::Error> {
     let full_path = path.to_str().unwrap();
     let s = fs::read_to_string(full_path)?;
 

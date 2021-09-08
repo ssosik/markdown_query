@@ -241,8 +241,7 @@ mod words_tests {
 
     #[test]
     fn two_space_separated_words() {
-        ExpectedParseResult::new("foo bar", 0, 1, 1, "\\n", 7, 1, 8)
-            .compare(&words, r#"foo bar\n"#)
+        ExpectedParseResult::new("foo bar", 0, 1, 1, "\\n", 7, 1, 8).compare(&words, r#"foo bar\n"#)
     }
 }
 
