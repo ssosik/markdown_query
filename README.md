@@ -46,6 +46,11 @@ usable.
     factor in query results
 * [ ] Keep track of all Tags to be used for autocompletion
 * [ ] cleanups, refactoring, rust-analyze, clippy and linting
+* [ ] Optimize binary and compile times
+  * [ ] https://matklad.github.io//2021/09/04/fast-rust-builds.html
+  * [ ] https://pingcap.com/blog/rust-compilation-model-calamity
+  * [ ] https://doc.rust-lang.org/rustc/profile-guided-optimization.html
+* Prune dependencies: https://pingcap.com/blog/rust-compilation-model-calamity#recent-work-on-rust-compile-times
 * [ ] CLI option for passing in starting query for interactive mode
 * [ ] CLI option to emit JSON instead of filename
 * [ ] import man/info pages and other canonical documentation for indexing and IR
