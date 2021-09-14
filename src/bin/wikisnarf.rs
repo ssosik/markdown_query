@@ -64,46 +64,42 @@ enum ParserState {
 
 struct Parser {
     state: ParserState,
-    title_complete: bool,
-    username_complete: bool,
-    timestamp_complete: bool,
-    text_complete: bool,
+    xqdoc: XqDocument,
+    db: WritableDatabase,
+    tg: TermGenerator,
 }
 
 impl Parser {
-    pub fn new() -> Self {
+    pub fn new(db: WritableDatabase, tg: TermGenerator) -> Self {
+        let mut xqdoc = XqDocument::new();
+        xqdoc.tags = vec![String::from("wikipedia")];
         Parser {
             state: ParserState::Between,
-            title_complete: false,
-            username_complete: false,
-            timestamp_complete: false,
-            text_complete: false,
+            xqdoc,
+            db,
+            tg,
         }
     }
 
-    fn reset_complete(&mut self) {
-        self.title_complete = false;
-        self.username_complete = false;
-        self.timestamp_complete = false;
-        self.text_complete = false;
-    }
-
-    fn record_is_complete(&mut self) -> bool {
-        self.title_complete
-            && self.username_complete
-            && self.timestamp_complete
-            && self.text_complete
-    }
-
-    pub fn process(&mut self, ev: Event, xqdoc: &mut XqDocument) -> Result<bool, Box<dyn Error>> {
+    pub fn process(&mut self, ev: Event) -> Result<(), Box<dyn Error>> {
         self.state = match self.state {
             ParserState::Between => match ev {
-                Event::Start(e) if e.local_name() == b"page" => ParserState::ReadingPage,
+                Event::Start(e) if e.local_name() == b"page" => {
+                    // New Doc to index
+                    let mut doc = XqDocument::new();
+                    doc.tags = vec![String::from("wikipedia")];
+                    self.xqdoc = doc;
+                    ParserState::ReadingPage
+                }
                 _ => ParserState::Between,
             },
 
             ParserState::ReadingPage => match ev {
-                Event::End(e) if e.local_name() == b"page" => ParserState::Between,
+                Event::End(e) if e.local_name() == b"page" => {
+                    // Publish completed record
+                    self.xqdoc.update_index(&mut self.db, &mut self.tg)?;
+                    ParserState::Between
+                }
                 Event::Start(e) => match e.local_name() {
                     b"title" => ParserState::ReadingTitle,
                     b"username" => ParserState::ReadingUsername,
@@ -123,9 +119,8 @@ impl Parser {
 
             ParserState::ReadingTitle => match ev {
                 Event::Text(e) => {
-                    xqdoc.title = String::from(str::from_utf8(&e.unescaped()?)?);
-                    xqdoc.filename = String::from(str::from_utf8(&e.unescaped()?)?);
-                    self.title_complete = true;
+                    self.xqdoc.title = String::from(str::from_utf8(&e.unescaped()?)?);
+                    self.xqdoc.filename = String::from(str::from_utf8(&e.unescaped()?)?);
                     ParserState::ReadingPage
                 }
                 _ => {
@@ -136,8 +131,7 @@ impl Parser {
 
             ParserState::ReadingTimestamp => match ev {
                 Event::Text(e) => {
-                    xqdoc.date = String::from(str::from_utf8(&e.unescaped()?)?);
-                    self.username_complete = true;
+                    self.xqdoc.date = String::from(str::from_utf8(&e.unescaped()?)?);
                     ParserState::ReadingPage
                 }
                 _ => {
@@ -148,8 +142,7 @@ impl Parser {
 
             ParserState::ReadingUsername => match ev {
                 Event::Text(e) => {
-                    xqdoc.author = String::from(str::from_utf8(&e.unescaped()?)?);
-                    self.timestamp_complete = true;
+                    self.xqdoc.author = String::from(str::from_utf8(&e.unescaped()?)?);
                     ParserState::ReadingPage
                 }
                 _ => {
@@ -160,8 +153,7 @@ impl Parser {
 
             ParserState::ReadingText => match ev {
                 Event::Text(e) => {
-                    xqdoc.body = String::from(str::from_utf8(&e.unescaped()?)?);
-                    self.text_complete = true;
+                    self.xqdoc.body = String::from(str::from_utf8(&e.unescaped()?)?);
                     ParserState::ReadingPage
                 }
                 _ => {
@@ -171,7 +163,7 @@ impl Parser {
             },
         };
 
-        Ok(self.record_is_complete())
+        Ok(())
     }
 }
 
@@ -197,26 +189,18 @@ fn main() -> Result<(), Box<dyn Error>> {
     let reader = BufReader::new(DecodeReaderBytes::new(reader));
     let mut xmlfile = Reader::from_reader(reader);
 
-    let mut parser = Parser::new();
-    let mut doc = XqDocument::new();
-    doc.tags = vec![String::from("wikipedia")];
-
-    let mut db = WritableDatabase::new(dbpath.as_str(), BRASS, DB_CREATE_OR_OPEN)?;
+    let db = WritableDatabase::new(dbpath.as_str(), BRASS, DB_CREATE_OR_OPEN)?;
     let mut tg = TermGenerator::new()?;
     let mut stemmer = Stem::new("en")?;
     tg.set_stemmer(&mut stemmer)?;
 
+    let mut parser = Parser::new(db, tg);
     loop {
-        if match xmlfile.read_event(&mut buf)? {
+        match xmlfile.read_event(&mut buf)? {
             Event::Eof => break,
-            ev => parser.process(ev, &mut doc)?,
-        } {
-            doc.update_index(&mut db, &mut tg)?;
-            bar.inc(BUF_SIZE as u64);
-            parser.reset_complete();
-            doc = XqDocument::new();
-            doc.tags = vec![String::from("wikipedia")];
+            ev => parser.process(ev)?,
         }
+        bar.inc(BUF_SIZE as u64);
         buf.clear();
     }
     bar.finish();
