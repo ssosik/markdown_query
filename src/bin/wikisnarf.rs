@@ -81,7 +81,11 @@ impl<'b> Parser<'b> {
         }
     }
 
-    pub fn process(&mut self, ev: Event) -> Result<(), Box<dyn Error>> {
+    pub fn process<'a>(
+        &mut self,
+        ev: Event,
+        bucket: &kv::Bucket<'a, &'a str, kv::Raw>,
+    ) -> Result<(), Box<dyn Error>> {
         self.state = match self.state {
             ParserState::Between => match ev {
                 Event::Start(e) if e.local_name() == b"page" => {
@@ -97,6 +101,10 @@ impl<'b> Parser<'b> {
             ParserState::ReadingPage => match ev {
                 Event::End(e) if e.local_name() == b"page" => {
                     // Publish completed record
+                    if bucket.contains(self.xqdoc.filename.as_str())? {
+                        println!("Already indexed a doc with name {}", self.xqdoc.filename);
+                    }
+                    bucket.set(self.xqdoc.filename.as_str(), self.xqdoc.filename.as_str() )?;
                     self.xqdoc.update_index(&mut self.db, &mut self.tg)?;
                     ParserState::Between
                 }
@@ -173,6 +181,10 @@ fn main() -> Result<(), Box<dyn Error>> {
     let dbpath = env::args().nth(1).ok_or("no db path provided")?;
     let mut buf = Vec::with_capacity(BUF_SIZE);
 
+    let mut cfg = kv::Config::new(&dbpath);
+    let store = kv::Store::new(cfg)?;
+    let bucket = store.bucket::<&str, kv::Raw>(None)?;
+
     let path = env::args().nth(2).ok_or("no zipfile")?;
 
     let metadata = fs::metadata(&path)?;
@@ -198,7 +210,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     loop {
         match xmlfile.read_event(&mut buf)? {
             Event::Eof => break,
-            ev => parser.process(ev)?,
+            ev => parser.process(ev, &bucket)?,
         }
         bar.inc(BUF_SIZE as u64);
         buf.clear();
