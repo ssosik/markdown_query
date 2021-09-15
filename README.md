@@ -1,4 +1,4 @@
-# Xapian-Query-CLI: xq
+# Xapiary: xq
 
 A local text file Xapian indexer and query tool. Started life as a minimal
 [Zettelkasten](https://zettelkasten.de/posts/overview/#principles)-like
@@ -9,10 +9,16 @@ language queries.
 I would like to extend this to index other bodies of text on a local filesystem,
 such as man/info pages. TODO
 
+# Example
+
+For demonstration purposes, here I indexed a bunch of articles from Wikipedia.
+[![asciicast](https://asciinema.org/a/435930.png)](https://asciinema.org/a/435930)
+
+
 # About
 
 How do you do personal notes? Grepping through a folder full of notes isn't the
-most effective way to do; using Xapian is a better way.
+most effective approach; using Xapian is a better way.
 
 I originally implemented this as a Vim plugin using some Python code built
 around [Xapian](https://xapian.org/), called
@@ -28,11 +34,9 @@ improving the code here.
 There's still a lot I'd like to do here, but this version should at least be
 usable.
 
-# TODOs
+# Wishlist of TODOs
 
-* [x] Add tests
-* [x] Query/filter on tags (make sure this is working properly)
-* [x] statically link xapian-core
+* [ ] Support Windows, ARM, any other platforms needed
 * [ ] Delete entries from local cache
 * [ ] Query/filter on time range
 * [ ] Vim Plugin
@@ -56,6 +60,9 @@ usable.
 * [ ] import man/info pages and other canonical documentation for indexing and IR
 * [ ] Add URL tag, support multiple?
 * [ ] Support multiple Author tags
+* [x] Add tests
+* [x] Query/filter on tags (make sure this is working properly)
+* [x] statically link xapian-core
 
 # Installation
 
@@ -66,12 +73,30 @@ For now, clone this repo and run the makefile.
 ```
 # Index a source directory, note the single quotes used here to prevent the
 # shell from expanding the wildcard here
-xq update '/path/to/files/*.md'
+xq [db dir] update '/path/to/files/*.md'
 
-# Run a query against an index
-xq
-xq query "some starting query"
+# Run an interactive query against an index
+xq [db dir]
 ```
+
+# Note on Markdown+Frontmatter format
+
+I would like to make this pluggable, but for now it's hardcoded to look for
+Markdown+Frontmatter files like this:
+
+    ---
+    author: Steve Sosik
+    date: 2021-01-15T08:23:24-05:00
+    tags:
+    - vim
+    title: How to grep open buffers in Vim
+    ---
+    
+    Run this command
+    
+    ```
+    :bufdo vimgrepadd [search] % | copen
+    ```
 
 # Requirements
 
