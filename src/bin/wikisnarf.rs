@@ -62,15 +62,15 @@ enum ParserState {
     ReadingText,
 }
 
-struct Parser {
+struct Parser<'a> {
     state: ParserState,
     xqdoc: XqDocument,
-    db: WritableDatabase,
-    tg: TermGenerator,
+    db: &'a mut WritableDatabase,
+    tg: &'a mut TermGenerator,
 }
 
-impl Parser {
-    pub fn new(db: WritableDatabase, tg: TermGenerator) -> Self {
+impl<'b> Parser<'b> {
+    pub fn new(db: &'b mut WritableDatabase, tg: &'b mut TermGenerator) -> Self {
         let mut xqdoc = XqDocument::new();
         xqdoc.tags = vec![String::from("wikipedia")];
         Parser {
@@ -189,12 +189,12 @@ fn main() -> Result<(), Box<dyn Error>> {
     let reader = BufReader::new(DecodeReaderBytes::new(reader));
     let mut xmlfile = Reader::from_reader(reader);
 
-    let db = WritableDatabase::new(dbpath.as_str(), BRASS, DB_CREATE_OR_OPEN)?;
+    let mut db = WritableDatabase::new(dbpath.as_str(), BRASS, DB_CREATE_OR_OPEN)?;
     let mut tg = TermGenerator::new()?;
     let mut stemmer = Stem::new("en")?;
     tg.set_stemmer(&mut stemmer)?;
 
-    let mut parser = Parser::new(db, tg);
+    let mut parser = Parser::new(&mut db, &mut tg);
     loop {
         match xmlfile.read_event(&mut buf)? {
             Event::Eof => break,
