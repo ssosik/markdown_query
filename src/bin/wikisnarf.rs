@@ -12,7 +12,7 @@ use std::{env, error::Error, io::BufReader, str};
 use xapian_rusty::{Stem, TermGenerator, WritableDatabase, BRASS, DB_CREATE_OR_OPEN};
 use xapiary::xq_document::XqDocument;
 
-const BUF_SIZE: usize = 4096 * 8; // 32kb at once
+const BUF_SIZE: usize = 4096;
 
 fn setup() -> Result<(), Report> {
     if std::env::var("RUST_LIB_BACKTRACE").is_err() {
@@ -104,7 +104,7 @@ impl<'b> Parser<'b> {
                     if bucket.contains(self.xqdoc.filename.as_str())? {
                         println!("Already indexed a doc with name {}", self.xqdoc.filename);
                     }
-                    bucket.set(self.xqdoc.filename.as_str(), self.xqdoc.filename.as_str() )?;
+                    bucket.set(self.xqdoc.filename.as_str(), self.xqdoc.filename.as_str())?;
                     self.xqdoc.update_index(&mut self.db, &mut self.tg)?;
                     ParserState::Between
                 }
