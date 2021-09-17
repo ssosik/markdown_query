@@ -6,6 +6,7 @@ use std::io::{Error, ErrorKind};
 use std::{ffi::OsString, fmt, fs, io, marker::PhantomData};
 use xapian_rusty::{Document, TermGenerator, WritableDatabase};
 use yaml_rust::YamlEmitter;
+use uuid::Uuid;
 
 /// Representation for a given Markdown + FrontMatter file; Example:
 /// ---
@@ -147,14 +148,15 @@ pub fn parse_file(path: &std::path::PathBuf) -> Result<XqDocument, io::Error> {
 
             let mut doc: XqDocument = serde_yaml::from_str(&out_str).unwrap();
 
-            let mut t = doc.title.clone();
-            // Allowed fields in meilisearch DocumentID:
-            // https://docs.meilisearch.com/learn/core_concepts/documents.html#primary-field
-            t.retain(|c| {
-                r#"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"#.contains(c)
-            });
-            doc.id = t;
+            //let mut t = doc.title.clone();
+            //// Allowed fields in meilisearch DocumentID:
+            //// https://docs.meilisearch.com/learn/core_concepts/documents.html#primary-field
+            //t.retain(|c| {
+            //    r#"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"#.contains(c)
+            //});
+            //doc.id = t;
 
+            doc.id = Uuid::new_v4().to_hyphenated().to_string();
             doc.body = content.to_string();
 
             Ok(doc)
