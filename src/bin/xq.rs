@@ -76,9 +76,9 @@ fn main() -> Result<(), Report> {
                 Ok(path) => {
                     if let Ok(xqdoc) = parse_file(&path) {
                         xqdoc.update_index(&mut db, &mut tg)?;
-                        if verbosity > 0 {
-                            println!("✅ {}", xqdoc.filename);
-                        }
+                        //if verbosity > 0 {
+                        //    println!("✅ {}", xqdoc.filename);
+                        //}
                     } else {
                         eprintln!("❌ Failed to load file {}", path.display());
                     }

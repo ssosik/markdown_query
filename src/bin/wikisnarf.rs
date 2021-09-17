@@ -101,10 +101,10 @@ impl<'b> Parser<'b> {
             ParserState::ReadingPage => match ev {
                 Event::End(e) if e.local_name() == b"page" => {
                     // Publish completed record
-                    if bucket.contains(self.xqdoc.filename.as_str())? {
-                        println!("Already indexed a doc with name {}", self.xqdoc.filename);
-                    }
-                    bucket.set(self.xqdoc.filename.as_str(), self.xqdoc.filename.as_str())?;
+                    //if bucket.contains(self.xqdoc.filename.as_str())? {
+                    //    println!("Already indexed a doc with name {}", self.xqdoc.filename);
+                    //}
+                    //bucket.set(self.xqdoc.filename.as_str(), self.xqdoc.filename.as_str())?;
                     self.xqdoc.update_index(&mut self.db, &mut self.tg)?;
                     ParserState::Between
                 }
@@ -128,7 +128,7 @@ impl<'b> Parser<'b> {
             ParserState::ReadingTitle => match ev {
                 Event::Text(e) => {
                     self.xqdoc.title = String::from(str::from_utf8(&e.unescaped()?)?);
-                    self.xqdoc.filename = String::from(str::from_utf8(&e.unescaped()?)?);
+                    //self.xqdoc.filename = String::from(str::from_utf8(&e.unescaped()?)?);
                     ParserState::ReadingPage
                 }
                 _ => {

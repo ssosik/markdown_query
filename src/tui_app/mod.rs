@@ -37,9 +37,9 @@ impl TerminalApp {
     pub fn get_selected(&mut self) -> Vec<String> {
         let mut ret: Vec<String> = Vec::new();
         if let Some(i) = self.state.selected() {
-            if let Some(s) = self.matches[i].full_path.to_str() {
-                ret.push(s.into());
-            }
+            //if let Some(s) = self.matches[i].full_path.to_str() {
+            //    ret.push(s.into());
+            //}
         };
         ret
     }

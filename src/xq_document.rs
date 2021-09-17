@@ -18,15 +18,11 @@ use yaml_rust::YamlEmitter;
 ///
 /// Some note here formatted with Markdown syntax
 ///
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct XqDocument {
     /// Inherent metadata about the document
     #[serde(default)]
     pub id: String,
-    #[serde(default)]
-    pub filename: String,
-    #[serde(default)]
-    pub full_path: OsString,
 
     /// FrontMatter-derived metadata about the document
     #[serde(default)]
@@ -51,8 +47,6 @@ impl XqDocument {
     pub fn new() -> Self {
         XqDocument {
             id: String::from(""),
-            filename: String::from(""),
-            full_path: OsString::from(""),
             author: String::from(""),
             date: String::from(""),
             tags: vec![],
@@ -75,11 +69,8 @@ impl XqDocument {
         } else if let Ok(s) = DateTime::parse_from_str(&self.date, &String::from("%Y-%m-%dT%T%z")) {
             return Ok(s);
         }
-        eprintln!("❌ Failed to convert path to str '{}'", &self.filename);
-        Err(eyre!(
-            "❌ Failed to convert path to str '{}'",
-            &self.filename
-        ))
+        eprintln!("❌ Failed to convert path to str");
+        Err(eyre!("❌ Failed to convert path to str"))
     }
 
     pub fn update_index(
@@ -93,8 +84,6 @@ impl XqDocument {
 
         tg.index_text_with_prefix(&self.author, "A")?;
         tg.index_text_with_prefix(&self.date_str()?, "D")?;
-        tg.index_text_with_prefix(&self.filename, "F")?;
-        tg.index_text_with_prefix(&self.full_path.clone().into_string().unwrap(), "F")?;
         tg.index_text_with_prefix(&self.title, "S")?;
         tg.index_text_with_prefix(&self.subtitle, "XS")?;
         for tag in &self.tags {
@@ -105,10 +94,6 @@ impl XqDocument {
 
         // Convert the XqDocument into JSON and set it in the DB for retrieval later
         doc.set_data(&serde_json::to_string(&self).unwrap())?;
-
-        let id = "Q".to_owned() + &self.filename;
-        doc.add_boolean_term(&id)?;
-        db.replace_document(&id, &mut doc)?;
 
         Ok(())
     }
@@ -161,12 +146,14 @@ pub fn parse_file(path: &std::path::PathBuf) -> Result<XqDocument, io::Error> {
             }
 
             let mut doc: XqDocument = serde_yaml::from_str(&out_str).unwrap();
-            // TODO Is this check necessary?
-            if doc.filename == *"" {
-                doc.filename = String::from(path.file_name().unwrap().to_str().unwrap());
-            }
 
-            doc.full_path = OsString::from(full_path);
+            let mut t = doc.title.clone();
+            // Allowed fields in meilisearch DocumentID:
+            // https://docs.meilisearch.com/learn/core_concepts/documents.html#primary-field
+            t.retain(|c| {
+                r#"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"#.contains(c)
+            });
+            doc.id = t;
 
             doc.body = content.to_string();
 

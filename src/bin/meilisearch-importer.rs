@@ -47,14 +47,16 @@ fn main() -> Result<(), Report> {
             // TODO convert this to iterator style using map/filter
             Ok(path) => {
                 if let Ok(mut xqdoc) = parse_file(&path) {
-                    //xqdoc.update_index(&mut db, &mut tg)?;
-                    xqdoc.id = xqdoc.filename.clone();
+                    let out = xqdoc.clone();
                     let res = client
                         .post("http://127.0.0.1:7700/indexes/notes/documents")
-                        .body(serde_json::to_string(&xqdoc).unwrap())
+                        .body(serde_json::to_string(&vec![xqdoc]).unwrap())
                         .send()?;
                     if verbosity > 0 {
-                        println!("✅ {} {:?} {}", xqdoc.filename, res, serde_json::to_string(&xqdoc).unwrap());
+                        println!(
+                            "✅ {:?} {}",
+                            res, serde_json::to_string(&vec![out]).unwrap(),
+                        );
                     }
                 } else {
                     eprintln!("❌ Failed to load file {}", path.display());
