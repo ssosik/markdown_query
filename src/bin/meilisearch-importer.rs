@@ -34,7 +34,9 @@ fn main() -> Result<(), Report> {
 
     let verbosity = cli.occurrences_of("v");
 
-    // reindex the data
+    let client = reqwest::blocking::Client::new();
+
+    // Read the markdown files and post them to local Meilisearch
     for entry in glob_files(
         cli.value_of("globpath").unwrap(),
         cli.occurrences_of("v") as i8,
@@ -44,10 +46,15 @@ fn main() -> Result<(), Report> {
         match entry {
             // TODO convert this to iterator style using map/filter
             Ok(path) => {
-                if let Ok(xqdoc) = parse_file(&path) {
+                if let Ok(mut xqdoc) = parse_file(&path) {
                     //xqdoc.update_index(&mut db, &mut tg)?;
+                    xqdoc.id = xqdoc.filename.clone();
+                    let res = client
+                        .post("http://127.0.0.1:7700/indexes/notes/documents")
+                        .body(serde_json::to_string(&xqdoc).unwrap())
+                        .send()?;
                     if verbosity > 0 {
-                        println!("✅ {}", xqdoc.filename);
+                        println!("✅ {} {:?} {}", xqdoc.filename, res, serde_json::to_string(&xqdoc).unwrap());
                     }
                 } else {
                     eprintln!("❌ Failed to load file {}", path.display());

@@ -22,6 +22,8 @@ use yaml_rust::YamlEmitter;
 pub struct XqDocument {
     /// Inherent metadata about the document
     #[serde(default)]
+    pub id: String,
+    #[serde(default)]
     pub filename: String,
     #[serde(default)]
     pub full_path: OsString,
@@ -48,6 +50,7 @@ pub struct XqDocument {
 impl XqDocument {
     pub fn new() -> Self {
         XqDocument {
+            id: String::from(""),
             filename: String::from(""),
             full_path: OsString::from(""),
             author: String::from(""),
