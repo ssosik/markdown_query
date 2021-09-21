@@ -55,7 +55,8 @@ fn main() -> Result<(), Report> {
                     if verbosity > 0 {
                         println!(
                             "✅ {:?} {}",
-                            res, serde_json::to_string(&vec![out]).unwrap(),
+                            res,
+                            serde_json::to_string(&vec![out]).unwrap(),
                         );
                     }
                 } else {

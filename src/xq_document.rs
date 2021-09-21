@@ -4,9 +4,9 @@ use eyre::{eyre, Result};
 use serde::{de, Deserialize, Deserializer, Serialize};
 use std::io::{Error, ErrorKind};
 use std::{ffi::OsString, fmt, fs, io, marker::PhantomData};
+use uuid::Uuid;
 use xapian_rusty::{Document, TermGenerator, WritableDatabase};
 use yaml_rust::YamlEmitter;
-use uuid::Uuid;
 
 /// Representation for a given Markdown + FrontMatter file; Example:
 /// ---
