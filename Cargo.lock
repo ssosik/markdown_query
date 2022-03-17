@@ -1059,6 +1059,7 @@ dependencies = [
  "termion",
  "tui",
  "unicode-width",
+ "walkdir",
  "xapian-rusty",
  "yaml-rust",
 ]

@@ -1,6 +1,7 @@
 use clap::{App, Arg, SubCommand};
 use color_eyre::Report;
 use dirs::home_dir;
+use walkdir::{DirEntry, WalkDir};
 use xapian_rusty::{Database, Stem, TermGenerator, WritableDatabase, BRASS, DB_CREATE_OR_OPEN};
 use xapiary::tui_app;
 use xapiary::util::glob_files;
@@ -38,10 +39,10 @@ fn main() -> Result<(), Report> {
         )
         .subcommand(
             SubCommand::with_name("update")
-                .about("Specify a path/glob pattern of matching files to index")
+                .about("Specify a path to a directory (searched recursively) containing markdown files to parse")
                 .arg(
-                    Arg::with_name("globpath") // And their own arguments
-                        .help("the files to add")
+                    Arg::with_name("path")
+                        .help("directory to recursively search")
                         .required(true),
                 ),
         )
@@ -51,8 +52,6 @@ fn main() -> Result<(), Report> {
                 .arg(Arg::with_name("query").required(true).help("Query string")),
         )
         .get_matches();
-
-    tui_app::setup_panic();
 
     let verbosity = cli.occurrences_of("v");
     let db_path = cli.value_of("db-path").unwrap();
@@ -64,17 +63,20 @@ fn main() -> Result<(), Report> {
         let mut stemmer = Stem::new("en")?;
         tg.set_stemmer(&mut stemmer)?;
 
-        // TODO is there a rustier way to do this?
-        for entry in glob_files(
-            cli.value_of("globpath").unwrap(),
-            cli.occurrences_of("v") as i8,
-        )
-        .expect("Failed to read glob pattern")
-        {
+        let walker = WalkDir::new(cli.value_of("path").unwrap()).into_iter();
+        for entry in walker.filter_entry(|e| {
+            !e.file_name()
+                .to_str()
+                .map(|s| s.starts_with("."))
+                .unwrap_or(false)
+        }) {
             match entry {
-                // TODO convert this to iterator style using map/filter
                 Ok(path) => {
-                    if let Ok(xqdoc) = parse_file(&path) {
+                    let path = path.path();
+                    if path.extension().is_none() || path.extension().unwrap() != "md" {
+                        continue;
+                    }
+                    if let Ok(xqdoc) = parse_file(path) {
                         xqdoc.update_index(&mut db, &mut tg)?;
                         if verbosity > 0 {
                             println!("✅ {}", xqdoc.filename);
@@ -91,6 +93,8 @@ fn main() -> Result<(), Report> {
         db.commit()?;
     } else {
         // Else, query the DB
+        tui_app::setup_panic();
+
         let db = Database::new_with_path(db_path, DB_CREATE_OR_OPEN)?;
         let iter = IntoIterator::into_iter(tui_app::interactive_query(db)?); // strings is moved here
         for s in iter {

@@ -144,7 +144,7 @@ where
     deserializer.deserialize_any(StringOrVec(PhantomData))
 }
 
-pub fn parse_file(path: &std::path::PathBuf) -> Result<XqDocument, io::Error> {
+pub fn parse_file(path: &std::path::Path) -> Result<XqDocument> {
     let full_path = path.to_str().unwrap();
     let s = fs::read_to_string(full_path)?;
 
@@ -157,7 +157,7 @@ pub fn parse_file(path: &std::path::PathBuf) -> Result<XqDocument, io::Error> {
                 emitter.dump(&yaml).unwrap(); // dump the YAML object to a String
             }
 
-            let mut doc: XqDocument = serde_yaml::from_str(&out_str).unwrap();
+            let mut doc: XqDocument = serde_yaml::from_str(&out_str)?;
             // TODO Is this check necessary?
             if doc.filename == *"" {
                 doc.filename = String::from(path.file_name().unwrap().to_str().unwrap());
@@ -169,9 +169,6 @@ pub fn parse_file(path: &std::path::PathBuf) -> Result<XqDocument, io::Error> {
 
             Ok(doc)
         }
-        None => Err(Error::new(
-            ErrorKind::Other,
-            format!("Failed to process file {}", path.display()),
-        )),
+        None => Err(eyre!("Failed to process file {}", path.display())),
     }
 }
