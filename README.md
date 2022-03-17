@@ -1,4 +1,4 @@
-# Xapiary: xq
+# MarkdownQuery: mdq
 
 A local text file Xapian indexer and query tool. Started life as a minimal
 [Zettelkasten](https://zettelkasten.de/posts/overview/#principles)-like
@@ -73,10 +73,10 @@ For now, clone this repo and run the makefile.
 ```
 # Index a source directory, note the single quotes used here to prevent the
 # shell from expanding the wildcard here
-xq [db dir] update '/path/to/files/*.md'
+mdq [db dir] update '/path/to/markdown-directory'
 
 # Run an interactive query against an index
-xq [db dir]
+mdq [db dir]
 ```
 
 # Note on Markdown+Frontmatter format

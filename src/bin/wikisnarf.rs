@@ -10,7 +10,7 @@ use quick_xml::{events::Event, Reader};
 use std::fs;
 use std::{env, error::Error, io::BufReader, str};
 use xapian_rusty::{Stem, TermGenerator, WritableDatabase, BRASS, DB_CREATE_OR_OPEN};
-use xapiary::xq_document::XqDocument;
+use mdq::xq_document::XqDocument;
 
 const BUF_SIZE: usize = 4096 * 8; // 32kb at once
 

@@ -5,22 +5,22 @@ XPCOREVER = 1.4.17
 XPCORE = xapian-core-$(XPCOREVER)
 XPCOREZ = $(XPCORE).tar.xz
 
-.PHONY: build release clean target/debug/xq target/release/xq
+.PHONY: build release clean target/debug/mdq target/release/mdq
 
 CARGO ?= cargo
 
-build: target/debug/xq
+build: target/debug/mdq
 
 tag:
-	git tag v`cargo metadata --format-version 1 | jq -r '.packages[] | select(.name =="xapiary") | .version'` && \
+	git tag v`cargo metadata --format-version 1 | jq -r '.packages[] | select(.name =="mdq") | .version'` && \
 		git push --tags
 
-release: target/release/xq
+release: target/release/mdq
 
-target/debug/xq: $(ZLIB) $(XPCORE)/.libs
+target/debug/mdq: $(ZLIB) $(XPCORE)/.libs
 	$(CARGO) build $(TARGET_FLAGS)
 
-target/release/xq: $(ZLIB) $(XPCORE)/.libs
+target/release/mdq: $(ZLIB) $(XPCORE)/.libs
 	$(CARGO) build --release $(TARGET_FLAGS)
 
 test: $(ZLIB) $(XPCORE)/.libs

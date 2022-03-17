@@ -1,5 +1,5 @@
 [package]
-name = "xapiary"
+name = "mdq"
 version = "0.2.0"
 authors = ["Steve Sosik <steve@little-fluffy.cloud>"]
 edition = "2018"

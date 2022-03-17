@@ -3,9 +3,9 @@ use color_eyre::Report;
 use dirs::home_dir;
 use walkdir::{DirEntry, WalkDir};
 use xapian_rusty::{Database, Stem, TermGenerator, WritableDatabase, BRASS, DB_CREATE_OR_OPEN};
-use xapiary::tui_app;
-use xapiary::util::glob_files;
-use xapiary::xq_document::parse_file;
+use mdq::tui_app;
+use mdq::util::glob_files;
+use mdq::xq_document::parse_file;
 
 fn setup() -> Result<(), Report> {
     if std::env::var("RUST_LIB_BACKTRACE").is_err() {
