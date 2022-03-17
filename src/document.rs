@@ -4,7 +4,7 @@ use eyre::{eyre, Result};
 use serde::{de, Deserialize, Deserializer, Serialize};
 use std::io::{Error, ErrorKind};
 use std::{ffi::OsString, fmt, fs, io, marker::PhantomData};
-use xapian_rusty::{Document, TermGenerator, WritableDatabase};
+use xapian_rusty::{Document as XapDoc, TermGenerator, WritableDatabase};
 use yaml_rust::YamlEmitter;
 
 /// Representation for a given Markdown + FrontMatter file; Example:
@@ -19,7 +19,7 @@ use yaml_rust::YamlEmitter;
 /// Some note here formatted with Markdown syntax
 ///
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
- struct Document {
+pub struct Document {
     /// Inherent metadata about the document
     #[serde(default)]
     pub filename: String,
@@ -85,7 +85,7 @@ impl Document {
         tg: &mut TermGenerator,
     ) -> Result<(), Report> {
         // Create a new Xapian Document to store attributes on the passed-in Document
-        let mut doc = Document::new()?;
+        let mut doc = XapDoc::new()?;
         tg.set_document(&mut doc)?;
 
         tg.index_text_with_prefix(&self.author, "A")?;
