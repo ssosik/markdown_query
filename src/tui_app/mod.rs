@@ -1,6 +1,6 @@
+use crate::document::Document;
 use crate::util::event::{Event, Events};
 use crate::xapian_utils;
-use crate::document::Document;
 use color_eyre::Report;
 use std::io::{stdout, Write};
 use termion::{event::Key, raw::IntoRawMode, screen::AlternateScreen};

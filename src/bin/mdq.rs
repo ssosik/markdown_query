@@ -1,11 +1,11 @@
 use clap::{App, Arg, SubCommand};
 use color_eyre::Report;
 use dirs::home_dir;
-use walkdir::{DirEntry, WalkDir};
-use xapian_rusty::{Database, Stem, TermGenerator, WritableDatabase, BRASS, DB_CREATE_OR_OPEN};
+use mdq::document::parse_file;
 use mdq::tui_app;
 use mdq::util::glob_files;
-use mdq::document::parse_file;
+use walkdir::{DirEntry, WalkDir};
+use xapian_rusty::{Database, Stem, TermGenerator, WritableDatabase, BRASS, DB_CREATE_OR_OPEN};
 
 fn setup() -> Result<(), Report> {
     if std::env::var("RUST_LIB_BACKTRACE").is_err() {

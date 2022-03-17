@@ -6,11 +6,11 @@ use bzip2::bufread::MultiBzDecoder;
 use color_eyre::Report;
 use encoding_rs_io::DecodeReaderBytes;
 use indicatif::{ProgressBar, ProgressStyle};
+use mdq::document::Document;
 use quick_xml::{events::Event, Reader};
 use std::fs;
 use std::{env, error::Error, io::BufReader, str};
 use xapian_rusty::{Stem, TermGenerator, WritableDatabase, BRASS, DB_CREATE_OR_OPEN};
-use mdq::document::Document;
 
 const BUF_SIZE: usize = 4096 * 8; // 32kb at once
 
