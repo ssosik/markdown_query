@@ -1,6 +1,6 @@
 use crate::util::event::{Event, Events};
 use crate::xapian_utils;
-use crate::xq_document::XqDocument;
+use crate::document::Document;
 use color_eyre::Report;
 use std::io::{stdout, Write};
 use termion::{event::Key, raw::IntoRawMode, screen::AlternateScreen};
@@ -24,7 +24,7 @@ pub(crate) struct TerminalApp {
     /// Preview window
     pub(crate) output: String,
     /// Query Matches
-    pub(crate) matches: Vec<XqDocument>,
+    pub(crate) matches: Vec<Document>,
     /// Keep track of which matches are selected
     pub(crate) state: ListState,
     /// Report query parsing errors back to the user

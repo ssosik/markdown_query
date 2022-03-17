@@ -1,4 +1,4 @@
-use crate::xq_document::XqDocument;
+use crate::document::Document;
 use color_eyre::Report;
 use eyre::{eyre, Result};
 #[allow(unused)]
@@ -689,8 +689,8 @@ named!(
     )
 );
 
-//fn query_db(mut db: Database, mut q: Query) -> Result<Vec<XqDocument>, Report> {
-pub fn query_db(mut enq: Enquire, mut q: Query) -> Result<Vec<XqDocument>, Report> {
+//fn query_db(mut db: Database, mut q: Query) -> Result<Vec<Document>, Report> {
+pub fn query_db(mut enq: Enquire, mut q: Query) -> Result<Vec<Document>, Report> {
     enq.set_query(&mut q)?;
     // TODO set this based on terminal height?
     let mut mset = enq.get_mset(0, 100)?;
@@ -705,7 +705,7 @@ pub fn query_db(mut enq: Enquire, mut q: Query) -> Result<Vec<XqDocument>, Repor
         let res = v.get_document_data();
         // Can use flatten() or some other iterators/combinators?
         if let Ok(data) = res {
-            let v: XqDocument = serde_json::from_str(&data)?;
+            let v: Document = serde_json::from_str(&data)?;
             //println!("Match {}", v.filename);
             matches.push(v);
         }

@@ -1,5 +1,5 @@
-// XQ utility for loading in a compressed Wikipedia backup and indexing the data
-// To be used for testing xq querying.
+// mdq utility for loading in a compressed Wikipedia backup and indexing the data
+// To be used for testing mdq querying.
 // XML Parsing idea from https://usethe.computer/posts/14-xmhell.html
 
 use bzip2::bufread::MultiBzDecoder;
@@ -10,7 +10,7 @@ use quick_xml::{events::Event, Reader};
 use std::fs;
 use std::{env, error::Error, io::BufReader, str};
 use xapian_rusty::{Stem, TermGenerator, WritableDatabase, BRASS, DB_CREATE_OR_OPEN};
-use mdq::xq_document::XqDocument;
+use mdq::document::Document;
 
 const BUF_SIZE: usize = 4096 * 8; // 32kb at once
 
@@ -64,18 +64,18 @@ enum ParserState {
 
 struct Parser<'a> {
     state: ParserState,
-    xqdoc: XqDocument,
+    doc: Document,
     db: &'a mut WritableDatabase,
     tg: &'a mut TermGenerator,
 }
 
 impl<'b> Parser<'b> {
     pub fn new(db: &'b mut WritableDatabase, tg: &'b mut TermGenerator) -> Self {
-        let mut xqdoc = XqDocument::new();
-        xqdoc.tags = vec![String::from("wikipedia")];
+        let mut doc = Document::new();
+        doc.tags = vec![String::from("wikipedia")];
         Parser {
             state: ParserState::Between,
-            xqdoc,
+            doc,
             db,
             tg,
         }
@@ -86,9 +86,9 @@ impl<'b> Parser<'b> {
             ParserState::Between => match ev {
                 Event::Start(e) if e.local_name() == b"page" => {
                     // New Doc to index
-                    let mut doc = XqDocument::new();
+                    let mut doc = Document::new();
                     doc.tags = vec![String::from("wikipedia")];
-                    self.xqdoc = doc;
+                    self.doc = doc;
                     ParserState::ReadingPage
                 }
                 _ => ParserState::Between,
@@ -97,7 +97,7 @@ impl<'b> Parser<'b> {
             ParserState::ReadingPage => match ev {
                 Event::End(e) if e.local_name() == b"page" => {
                     // Publish completed record
-                    self.xqdoc.update_index(&mut self.db, &mut self.tg)?;
+                    self.doc.update_index(&mut self.db, &mut self.tg)?;
                     ParserState::Between
                 }
                 Event::Start(e) => match e.local_name() {
@@ -119,8 +119,8 @@ impl<'b> Parser<'b> {
 
             ParserState::ReadingTitle => match ev {
                 Event::Text(e) => {
-                    self.xqdoc.title = String::from(str::from_utf8(&e.unescaped()?)?);
-                    self.xqdoc.filename = String::from(str::from_utf8(&e.unescaped()?)?);
+                    self.doc.title = String::from(str::from_utf8(&e.unescaped()?)?);
+                    self.doc.filename = String::from(str::from_utf8(&e.unescaped()?)?);
                     ParserState::ReadingPage
                 }
                 _ => {
@@ -131,7 +131,7 @@ impl<'b> Parser<'b> {
 
             ParserState::ReadingTimestamp => match ev {
                 Event::Text(e) => {
-                    self.xqdoc.date = String::from(str::from_utf8(&e.unescaped()?)?);
+                    self.doc.date = String::from(str::from_utf8(&e.unescaped()?)?);
                     ParserState::ReadingPage
                 }
                 _ => {
@@ -142,7 +142,7 @@ impl<'b> Parser<'b> {
 
             ParserState::ReadingUsername => match ev {
                 Event::Text(e) => {
-                    self.xqdoc.author = String::from(str::from_utf8(&e.unescaped()?)?);
+                    self.doc.author = String::from(str::from_utf8(&e.unescaped()?)?);
                     ParserState::ReadingPage
                 }
                 _ => {
@@ -153,7 +153,7 @@ impl<'b> Parser<'b> {
 
             ParserState::ReadingText => match ev {
                 Event::Text(e) => {
-                    self.xqdoc.body = String::from(str::from_utf8(&e.unescaped()?)?);
+                    self.doc.body = String::from(str::from_utf8(&e.unescaped()?)?);
                     ParserState::ReadingPage
                 }
                 _ => {

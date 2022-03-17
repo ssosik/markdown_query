@@ -5,7 +5,7 @@ use walkdir::{DirEntry, WalkDir};
 use xapian_rusty::{Database, Stem, TermGenerator, WritableDatabase, BRASS, DB_CREATE_OR_OPEN};
 use mdq::tui_app;
 use mdq::util::glob_files;
-use mdq::xq_document::parse_file;
+use mdq::document::parse_file;
 
 fn setup() -> Result<(), Report> {
     if std::env::var("RUST_LIB_BACKTRACE").is_err() {
@@ -20,12 +20,12 @@ fn main() -> Result<(), Report> {
     setup()?;
 
     let mut db_path = home_dir().unwrap();
-    db_path.push(".xq-data");
+    db_path.push(".mdq-data");
 
-    let cli = App::new("xq")
+    let cli = App::new("mdq")
         .version("1.0")
         .author("Steve <steve@little-fluffy.cloud>")
-        .about("xq: Zettlekasten-like Markdown+FrontMatter Indexer and query tool")
+        .about("mdq: Zettlekasten-like Markdown+FrontMatter Indexer and query tool")
         .arg(
             Arg::with_name("v")
                 .short("v")
@@ -76,10 +76,10 @@ fn main() -> Result<(), Report> {
                     if path.extension().is_none() || path.extension().unwrap() != "md" {
                         continue;
                     }
-                    if let Ok(xqdoc) = parse_file(path) {
-                        xqdoc.update_index(&mut db, &mut tg)?;
+                    if let Ok(doc) = parse_file(path) {
+                        doc.update_index(&mut db, &mut tg)?;
                         if verbosity > 0 {
-                            println!("✅ {}", xqdoc.filename);
+                            println!("✅ {}", doc.filename);
                         }
                     } else {
                         eprintln!("❌ Failed to load file {}", path.display());

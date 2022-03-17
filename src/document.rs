@@ -19,7 +19,7 @@ use yaml_rust::YamlEmitter;
 /// Some note here formatted with Markdown syntax
 ///
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
-pub struct XqDocument {
+ struct Document {
     /// Inherent metadata about the document
     #[serde(default)]
     pub filename: String,
@@ -45,9 +45,9 @@ pub struct XqDocument {
     pub body: String,
 }
 
-impl XqDocument {
+impl Document {
     pub fn new() -> Self {
-        XqDocument {
+        Document {
             filename: String::from(""),
             full_path: OsString::from(""),
             author: String::from(""),
@@ -84,7 +84,7 @@ impl XqDocument {
         db: &mut WritableDatabase,
         tg: &mut TermGenerator,
     ) -> Result<(), Report> {
-        // Create a new Xapian Document to store attributes on the passed-in XqDocument
+        // Create a new Xapian Document to store attributes on the passed-in Document
         let mut doc = Document::new()?;
         tg.set_document(&mut doc)?;
 
@@ -100,7 +100,7 @@ impl XqDocument {
 
         tg.index_text(&self.body)?;
 
-        // Convert the XqDocument into JSON and set it in the DB for retrieval later
+        // Convert the Document into JSON and set it in the DB for retrieval later
         doc.set_data(&serde_json::to_string(&self).unwrap())?;
 
         let id = "Q".to_owned() + &self.filename;
@@ -144,7 +144,7 @@ where
     deserializer.deserialize_any(StringOrVec(PhantomData))
 }
 
-pub fn parse_file(path: &std::path::Path) -> Result<XqDocument> {
+pub fn parse_file(path: &std::path::Path) -> Result<Document> {
     let full_path = path.to_str().unwrap();
     let s = fs::read_to_string(full_path)?;
 
@@ -157,7 +157,7 @@ pub fn parse_file(path: &std::path::Path) -> Result<XqDocument> {
                 emitter.dump(&yaml).unwrap(); // dump the YAML object to a String
             }
 
-            let mut doc: XqDocument = serde_yaml::from_str(&out_str)?;
+            let mut doc: Document = serde_yaml::from_str(&out_str)?;
             // TODO Is this check necessary?
             if doc.filename == *"" {
                 doc.filename = String::from(path.file_name().unwrap().to_str().unwrap());
