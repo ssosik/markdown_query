@@ -2,7 +2,9 @@ use crate::date::{date_deserializer, Date};
 use chrono::{DateTime, FixedOffset};
 use color_eyre::Report;
 use eyre::{eyre, Result};
-use serde::{de, ser::SerializeStruct, Deserialize, Deserializer, Serialize, Serializer};
+use serde::{
+    de, ser::SerializeSeq, ser::SerializeStruct, Deserialize, Deserializer, Serialize, Serializer,
+};
 use std::io::{Error, ErrorKind};
 use std::str::FromStr;
 use std::{ffi::OsString, fmt, fs, io, marker::PhantomData};
@@ -26,11 +28,24 @@ impl Default for SerializationType {
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Deserialize)]
-struct VecString(Vec<String>);
+pub struct VecString(Vec<String>);
 
 impl fmt::Display for VecString {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", VecString.join(","))
+        write!(f, "{}", self.0.join(","))
+    }
+}
+
+impl Serialize for VecString {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut seq = serializer.serialize_seq(Some(self.0.len()))?;
+        for element in &self.0 {
+            seq.serialize_element(&element)?;
+        }
+        seq.end()
     }
 }
 
@@ -149,8 +164,8 @@ impl Document {
         let mut doc = XapDoc::new()?;
         tg.set_document(&mut doc)?;
 
-        tg.index_text_with_prefix(&self.authors, "A")?;
-        tg.index_text_with_prefix(&self.date.to_string()?, "D")?;
+        tg.index_text_with_prefix(&self.authors.to_string(), "A")?;
+        tg.index_text_with_prefix(&self.date.to_string(), "D")?;
         tg.index_text_with_prefix(&self.filename, "F")?;
         tg.index_text_with_prefix(&self.full_path.clone().into_string().unwrap(), "F")?;
         tg.index_text_with_prefix(&self.title, "S")?;
