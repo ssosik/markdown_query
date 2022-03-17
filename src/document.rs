@@ -25,6 +25,15 @@ impl Default for SerializationType {
     }
 }
 
+#[derive(Clone, Debug, Default, PartialEq, Deserialize)]
+struct VecString(Vec<String>);
+
+impl fmt::Display for VecString {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", VecString.join(","))
+    }
+}
+
 /// Representation for a given Markdown + FrontMatter file; Example:
 /// ---
 /// author: Steve Sosik
@@ -53,7 +62,7 @@ pub struct Document {
 
     /// FrontMatter-derived metadata about the document
     #[serde(default, alias = "author")]
-    pub authors: Vec<String>,
+    pub authors: VecString,
 
     /// RFC 3339 based timestamp
     /// Epoch seconds
@@ -212,7 +221,7 @@ impl From<markdown_fm_doc::Document> for Document {
         let uuid = UuidB64::new();
         Document {
             id: uuid.to_string(),
-            authors: vec![item.author],
+            authors: VecString(vec![item.author]),
             body: item.body,
             date: Date::from_str(&item.date).unwrap(),
             writes: 1,
