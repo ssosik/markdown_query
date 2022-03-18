@@ -1,10 +1,8 @@
 use clap::{App, Arg, SubCommand};
 use color_eyre::Report;
 use dirs::home_dir;
-use mdq::document::parse_file;
-use mdq::tui_app;
-use mdq::util::glob_files;
-use walkdir::{DirEntry, WalkDir};
+use mdq::{document, tui_app};
+use walkdir::WalkDir;
 use xapian_rusty::{Database, Stem, TermGenerator, WritableDatabase, BRASS, DB_CREATE_OR_OPEN};
 
 fn setup() -> Result<(), Report> {
@@ -76,7 +74,7 @@ fn main() -> Result<(), Report> {
                     if path.extension().is_none() || path.extension().unwrap() != "md" {
                         continue;
                     }
-                    if let Ok(doc) = parse_file(path) {
+                    if let Ok(doc) = document::Document::parse_file(&path) {
                         doc.update_index(&mut db, &mut tg)?;
                         if verbosity > 0 {
                             println!("✅ {}", doc.filename);

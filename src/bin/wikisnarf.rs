@@ -6,9 +6,11 @@ use bzip2::bufread::MultiBzDecoder;
 use color_eyre::Report;
 use encoding_rs_io::DecodeReaderBytes;
 use indicatif::{ProgressBar, ProgressStyle};
-use mdq::document::Document;
+use mdq::date::Date;
+use mdq::document::{Document, VecString};
 use quick_xml::{events::Event, Reader};
 use std::fs;
+use std::str::FromStr;
 use std::{env, error::Error, io::BufReader, str};
 use xapian_rusty::{Stem, TermGenerator, WritableDatabase, BRASS, DB_CREATE_OR_OPEN};
 
@@ -131,7 +133,7 @@ impl<'b> Parser<'b> {
 
             ParserState::ReadingTimestamp => match ev {
                 Event::Text(e) => {
-                    self.doc.date = String::from(str::from_utf8(&e.unescaped()?)?);
+                    self.doc.date = Date::from_str(str::from_utf8(&e.unescaped()?)?).unwrap();
                     ParserState::ReadingPage
                 }
                 _ => {
@@ -142,7 +144,8 @@ impl<'b> Parser<'b> {
 
             ParserState::ReadingUsername => match ev {
                 Event::Text(e) => {
-                    self.doc.author = String::from(str::from_utf8(&e.unescaped()?)?);
+                    self.doc.authors =
+                        VecString::new(vec![String::from(str::from_utf8(&e.unescaped()?)?)]);
                     ParserState::ReadingPage
                 }
                 _ => {

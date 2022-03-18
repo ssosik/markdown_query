@@ -30,6 +30,12 @@ impl Default for SerializationType {
 #[derive(Clone, Debug, Default, PartialEq, Deserialize)]
 pub struct VecString(Vec<String>);
 
+impl VecString {
+    pub fn new(v: Vec<String>) -> VecString {
+        VecString(v)
+    }
+}
+
 impl fmt::Display for VecString {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.0.join(","))
