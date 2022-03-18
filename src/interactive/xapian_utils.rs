@@ -9,7 +9,7 @@ use nom::{
     combinator::{recognize, value},
     multi::{many0, many1},
     sequence::{delimited, pair, separated_pair, tuple},
-    {alt, branch::alt, complete, delimited, named, tag, take_until, value}, // {IResult},
+    {branch::alt, complete}, // {IResult},
 };
 use std::convert::From;
 use std::fmt;
@@ -659,35 +659,35 @@ pub fn parse_user_query(mut qstr: &str) -> Result<Query, Report> {
 }
 
 // TODO is there a better way to handle case insensitity here?
-named!(
-    take_up_to_operator,
-    alt!(
-        complete!(take_until!("AND MAYBE"))
-            | complete!(take_until!("and maybe"))
-            | complete!(take_until!("AND NOT"))
-            | complete!(take_until!("and not"))
-            | complete!(take_until!("SYNONYM"))
-            | complete!(take_until!("synonym"))
-            | complete!(take_until!("FILTER"))
-            | complete!(take_until!("filter"))
-            | complete!(take_until!("PHRASE"))
-            | complete!(take_until!("phrase"))
-            | complete!(take_until!("SCALED"))
-            | complete!(take_until!("scaled"))
-            | complete!(take_until!("ELITE"))
-            | complete!(take_until!("elite"))
-            | complete!(take_until!("RANGE"))
-            | complete!(take_until!("range"))
-            | complete!(take_until!("NEAR"))
-            | complete!(take_until!("near"))
-            | complete!(take_until!("AND"))
-            | complete!(take_until!("and"))
-            | complete!(take_until!("XOR"))
-            | complete!(take_until!("xor"))
-            | complete!(take_until!("OR"))
-            | complete!(take_until!("or"))
-    )
-);
+//named!(
+//    take_up_to_operator,
+//    alt!(
+//        complete!(take_until!("AND MAYBE"))
+//            | complete!(take_until!("and maybe"))
+//            | complete!(take_until!("AND NOT"))
+//            | complete!(take_until!("and not"))
+//            | complete!(take_until!("SYNONYM"))
+//            | complete!(take_until!("synonym"))
+//            | complete!(take_until!("FILTER"))
+//            | complete!(take_until!("filter"))
+//            | complete!(take_until!("PHRASE"))
+//            | complete!(take_until!("phrase"))
+//            | complete!(take_until!("SCALED"))
+//            | complete!(take_until!("scaled"))
+//            | complete!(take_until!("ELITE"))
+//            | complete!(take_until!("elite"))
+//            | complete!(take_until!("RANGE"))
+//            | complete!(take_until!("range"))
+//            | complete!(take_until!("NEAR"))
+//            | complete!(take_until!("near"))
+//            | complete!(take_until!("AND"))
+//            | complete!(take_until!("and"))
+//            | complete!(take_until!("XOR"))
+//            | complete!(take_until!("xor"))
+//            | complete!(take_until!("OR"))
+//            | complete!(take_until!("or"))
+//    )
+//);
 
 //fn query_db(mut db: Database, mut q: Query) -> Result<Vec<Document>, Report> {
 pub fn query_db(mut enq: Enquire, mut q: Query) -> Result<Vec<Document>, Report> {

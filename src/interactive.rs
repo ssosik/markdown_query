@@ -12,7 +12,7 @@ use syntect::util::{as_24_bit_terminal_escaped, LinesWithEndings};
 use tempfile::Builder;
 use termion::{event::Key, raw::IntoRawMode, screen::AlternateScreen};
 use tui::{
-    backend::TermionBackend,
+    backend::CrosstermBackend,
     layout::{Constraint, Direction, Layout},
     style::{Color, Modifier, Style},
     text::{Span, Spans},
@@ -127,7 +127,7 @@ pub fn query(
     pager: String,
     editor: String,
 ) -> Result<Vec<String>, Report> {
-    let mut tui = tui::Terminal::new(TermionBackend::new(AlternateScreen::from(
+    let mut tui = tui::Terminal::new(CrosstermBackend::new(AlternateScreen::from(
         stdout().into_raw_mode().unwrap(),
     )))
     .unwrap();
@@ -362,7 +362,7 @@ pub fn query(
                                 .status()
                                 .expect("failed to execute process");
                             events = event::Events::new();
-                            tui = tui::Terminal::new(TermionBackend::new(AlternateScreen::from(
+                            tui = tui::Terminal::new(CrosstermBackend::new(AlternateScreen::from(
                                 stdout().into_raw_mode().unwrap(),
                             )))
                             .unwrap();
@@ -393,7 +393,7 @@ pub fn query(
                                 .status()
                                 .expect("failed to execute process");
                             events = event::Events::new();
-                            tui = tui::Terminal::new(TermionBackend::new(AlternateScreen::from(
+                            tui = tui::Terminal::new(CrosstermBackend::new(AlternateScreen::from(
                                 stdout().into_raw_mode().unwrap(),
                             )))
                             .unwrap();
