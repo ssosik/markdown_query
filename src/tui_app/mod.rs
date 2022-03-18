@@ -13,8 +13,8 @@ use tui::{
 };
 use xapian_rusty::Database;
 
-// Needed to provide `width()` method on String:
-// no method named `width` found for struct `std::string::String` in the current scope
+// Needed to provide `width()` method on String: no method named `width` found
+// for struct `std::string::String` in the current scope
 use unicode_width::UnicodeWidthStr;
 
 /// TerminalApp holds the state of the application
