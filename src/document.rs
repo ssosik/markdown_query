@@ -1,7 +1,6 @@
 use crate::date::{date_deserializer, Date};
-use chrono::{DateTime, FixedOffset};
 use color_eyre::Report;
-use eyre::{eyre, Result};
+use eyre::Result;
 use serde::{
     de, ser::SerializeSeq, ser::SerializeStruct, Deserialize, Deserializer, Serialize, Serializer,
 };
