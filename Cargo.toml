@@ -9,6 +9,10 @@ edition = "2018"
 name = "mdq"
 path = "src/main.rs"
 
+[lib]
+name = "markdown_query"
+path = "src/lib.rs"
+
 [dependencies]
 chrono = "0.4"
 clap = "2.33.3"

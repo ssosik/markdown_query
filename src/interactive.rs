@@ -1,5 +1,5 @@
+mod xapian_utils;
 use crate::document;
-use crate::xapian_utils;
 use ansi_to_tui::ansi_to_text;
 use color_eyre::Report;
 use eyre::bail;
