@@ -1,8 +1,8 @@
-mod document;
 mod interactive;
 use clap::{App, Arg, SubCommand};
 use color_eyre::Report;
 use dirs::home_dir;
+use markdown_query::document;
 use walkdir::WalkDir;
 use xapian_rusty::{Database, Stem, TermGenerator, WritableDatabase, BRASS, DB_CREATE_OR_OPEN};
 
@@ -92,10 +92,15 @@ fn main() -> Result<(), Report> {
         db.commit()?;
     } else {
         // Else, query the DB
-        tui_app::setup_panic();
+        interactive::setup_panic();
 
         let db = Database::new_with_path(db_path, DB_CREATE_OR_OPEN)?;
-        let iter = IntoIterator::into_iter(interactive::query(db)?); // strings is moved here
+        let iter = IntoIterator::into_iter(interactive::query(
+            db,
+            3,
+            String::from("less"),
+            String::from("vim"),
+        )?); // strings is moved here
         for s in iter {
             // next() moves a string out of the iter
             println!("{}", s);

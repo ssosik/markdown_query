@@ -194,8 +194,8 @@ pub fn query(
                 let escaped = as_24_bit_terminal_escaped(&ranges[..], true);
                 preview_text.push_str(&escaped);
             }
-            //let preview_text = Paragraph::new(app.preview.as_ref())
-            let preview_text = Paragraph::new(ansi_to_text(preview_text.bytes()).unwrap())
+            //let preview_text = Paragraph::new(ansi_to_text(preview_text.bytes()).unwrap())
+            let preview_text = Paragraph::new(app.preview.as_ref())
                 .block(Block::default().borders(Borders::NONE))
                 .wrap(Wrap { trim: true });
             f.render_widget(preview_text, screen[1]);
@@ -409,60 +409,74 @@ pub fn query(
                         _ => {}
                     }
 
-                    let mut q = api::ApiQuery::new();
-                    q.query = Some(app.query_input.to_owned());
+                    let mut inp: String = app.query_input.to_owned();
+                    // Add a trailing ` ;` to the query to hint to Nom that it has a "full" string
+                    inp.push_str(" ;");
 
-                    q.process_filter(app.filter_input.to_owned());
-
-                    app.debug = serde_json::to_string(&q).unwrap();
-
-                    // Split up the JSON decoding into two steps.
-                    // 1.) Get the text of the body.
-                    let response_body = match client
-                        .post(uri.as_ref())
-                        .body::<String>(serde_json::to_string(&q).unwrap())
-                        .header(CONTENT_TYPE, "application/json")
-                        .send()
-                    {
-                        Ok(resp) => {
-                            if !resp.status().is_success() {
-                                app.error = format!("Request failed: {:?}", resp);
-                                continue;
-                            }
-                            match resp.text() {
-                                Ok(text) => text,
-                                Err(e) => {
-                                    app.error = format!("resp.text() failed: {:?}", e);
-                                    continue;
-                                }
-                            }
+                    let enq = db.new_enquire()?;
+                    match xapian_utils::parse_user_query(&inp) {
+                        Ok(mut query) => {
+                            //app.query = query.get_description();
+                            app.matches = xapian_utils::query_db(enq, query)?;
                         }
                         Err(e) => {
-                            app.error = format!("Send failed: {:?}", e);
-                            continue;
+                            app.error = e.to_string();
                         }
                     };
+                    //let mut q = api::ApiQuery::new();
+                    //q.query = Some(app.query_input.to_owned());
 
-                    // 2.) Parse the results as JSON.
-                    match serde_json::from_str::<api::ApiResponse>(&response_body) {
-                        Ok(mut resp) => {
-                            app.matches = resp
-                                .hits
-                                .iter_mut()
-                                .map(|mut m| {
-                                    m.serialization_type = document::SerializationType::Human;
-                                    m.to_owned()
-                                })
-                                .collect::<Vec<_>>();
-                            app.error = String::from("");
-                        }
-                        Err(e) => {
-                            app.error = format!(
-                                "Could not deserialize body from: {}; error: {:?}",
-                                response_body, e
-                            )
-                        }
-                    };
+                    //q.process_filter(app.filter_input.to_owned());
+
+                    //app.debug = serde_json::to_string(&q).unwrap();
+
+                    //// Split up the JSON decoding into two steps.
+                    //// 1.) Get the text of the body.
+                    //let response_body = match client
+                    //    .post(uri.as_ref())
+                    //    .body::<String>(serde_json::to_string(&q).unwrap())
+                    //    .header(CONTENT_TYPE, "application/json")
+                    //    .send()
+                    //{
+                    //    Ok(resp) => {
+                    //        if !resp.status().is_success() {
+                    //            app.error = format!("Request failed: {:?}", resp);
+                    //            continue;
+                    //        }
+                    //        match resp.text() {
+                    //            Ok(text) => text,
+                    //            Err(e) => {
+                    //                app.error = format!("resp.text() failed: {:?}", e);
+                    //                continue;
+                    //            }
+                    //        }
+                    //    }
+                    //    Err(e) => {
+                    //        app.error = format!("Send failed: {:?}", e);
+                    //        continue;
+                    //    }
+                    //};
+
+                    //// 2.) Parse the results as JSON.
+                    //match serde_json::from_str::<api::ApiResponse>(&response_body) {
+                    //    Ok(mut resp) => {
+                    //        app.matches = resp
+                    //            .hits
+                    //            .iter_mut()
+                    //            .map(|mut m| {
+                    //                m.serialization_type = document::SerializationType::Human;
+                    //                m.to_owned()
+                    //            })
+                    //            .collect::<Vec<_>>();
+                    //        app.error = String::from("");
+                    //    }
+                    //    Err(e) => {
+                    //        app.error = format!(
+                    //            "Could not deserialize body from: {}; error: {:?}",
+                    //            response_body, e
+                    //        )
+                    //    }
+                    //};
                 }
             }
         }
@@ -529,7 +543,7 @@ pub mod event {
                 thread::spawn(move || {
                     let stdin = io::stdin();
                     for evt in stdin.keys().flatten() {
-                        if tx.send(Event::Input(evt)).is_err() {
+                        if let Err(err) = tx.send(Event::Input(evt)) {
                             dbg!(err);
                             return;
                         }
@@ -538,7 +552,7 @@ pub mod event {
             };
             let tick_handle = {
                 thread::spawn(move || loop {
-                    if tx.send(Event::Tick).is_err() {
+                    if let Err(err) = tx.send(Event::Tick) {
                         dbg!(err);
                         break;
                     }
