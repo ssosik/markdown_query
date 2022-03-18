@@ -236,24 +236,6 @@ impl fmt::Display for Document {
     }
 }
 
-impl From<markdown_fm_doc::Document> for Document {
-    fn from(item: markdown_fm_doc::Document) -> Self {
-        let uuid = UuidB64::new();
-        Document {
-            id: uuid.to_string(),
-            authors: VecString(vec![item.author]),
-            body: item.body,
-            date: Date::from_str(&item.date).unwrap(),
-            writes: 1,
-            tags: item.tags,
-            title: item.title,
-            subtitle: item.subtitle,
-            filename: item.filename,
-            ..Default::default()
-        }
-    }
-}
-
 // Custom Serialization to skip various attributes if requested, ie when writing to disk
 impl Serialize for Document {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>

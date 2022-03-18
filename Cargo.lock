@@ -465,20 +465,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7fb9b38af92608140b86b693604b9ffcc5824240a484d1ecd4795bacb2fe88f3"
 
 [[package]]
-name = "markdown-fm-doc"
-version = "0.1.0"
-source = "git+https://github.com/ssosik/markdown-fm-doc#3151a4669c9a40ad60dc024a76e5527095538cf2"
-dependencies = [
- "chrono",
- "color-eyre",
- "eyre",
- "frontmatter",
- "serde",
- "serde_yaml",
- "yaml-rust",
-]
-
-[[package]]
 name = "markdown_query"
 version = "0.3.0"
 dependencies = [
@@ -489,7 +475,6 @@ dependencies = [
  "eyre",
  "frontmatter",
  "glob",
- "markdown-fm-doc",
  "nom",
  "nom_locate",
  "serde",
