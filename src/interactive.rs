@@ -1,6 +1,6 @@
 mod xapian_utils;
 use crate::document;
-use ansi_to_tui::ansi_to_text;
+
 use color_eyre::Report;
 use eyre::bail;
 use std::io::{stdout, Write};
@@ -415,7 +415,7 @@ pub fn query(
 
                     let enq = db.new_enquire()?;
                     match xapian_utils::parse_user_query(&inp) {
-                        Ok(mut query) => {
+                        Ok(query) => {
                             //app.query = query.get_description();
                             app.matches = xapian_utils::query_db(enq, query)?;
                         }

@@ -66,7 +66,7 @@ fn main() -> Result<(), Report> {
         for entry in walker.filter_entry(|e| {
             !e.file_name()
                 .to_str()
-                .map(|s| s.starts_with("."))
+                .map(|s| s.starts_with('.'))
                 .unwrap_or(false)
         }) {
             match entry {
@@ -75,7 +75,7 @@ fn main() -> Result<(), Report> {
                     if path.extension().is_none() || path.extension().unwrap() != "md" {
                         continue;
                     }
-                    if let Ok(doc) = document::Document::parse_file(&path) {
+                    if let Ok(doc) = document::Document::parse_file(path) {
                         doc.update_index(&mut db, &mut tg)?;
                         if verbosity > 0 {
                             println!("✅ {}", doc.filename);
