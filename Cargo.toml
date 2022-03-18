@@ -1,5 +1,5 @@
 [package]
-name = "mdq"
+name = "markdown_query"
 version = "0.3.0"
 authors = ["Steve Sosik <steve@little-fluffy.cloud>"]
 edition = "2018"

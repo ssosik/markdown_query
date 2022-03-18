@@ -1,7 +1,7 @@
 use clap::{App, Arg, SubCommand};
 use color_eyre::Report;
 use dirs::home_dir;
-use mdq::{document, tui_app};
+use markdown_query::{document, tui_app};
 use walkdir::WalkDir;
 use xapian_rusty::{Database, Stem, TermGenerator, WritableDatabase, BRASS, DB_CREATE_OR_OPEN};
 
@@ -23,7 +23,7 @@ fn main() -> Result<(), Report> {
     let cli = App::new("mdq")
         .version("1.0")
         .author("Steve <steve@little-fluffy.cloud>")
-        .about("mdq: Zettlekasten-like Markdown+FrontMatter Indexer and query tool")
+        .about("mdq: Markdown+FrontMatter Indexer and query tool")
         .arg(
             Arg::with_name("v")
                 .short("v")
