@@ -6,18 +6,23 @@ use std::ffi::OsStr;
 use walkdir::WalkDir;
 use xapian_rusty::{Database, Stem, TermGenerator, WritableDatabase, BRASS, DB_CREATE_OR_OPEN};
 
-/// mdq: Markdown+FrontMatter index/query tool
-/// Use xapian backend to index markdown files containing YAML frontmatter metadata, then provide
-/// an interactive CLI to query data. Use expressive language like 'foo AND bar AND tag:qux'
 #[derive(Parser, Debug)]
-#[clap(author, version, about, long_about = None)]
+#[clap(author, version, about)]
 struct Cli {
     // TODO use https://docs.rs/clap-verbosity-flag/1.0.0/clap_verbosity_flag/
-    // Set level of verbosity
+    /// Set level of verbosity
     #[clap(short, long, parse(from_occurrences))]
     verbosity: u8,
 
-    // Specify where to write the DB to
+    /// Specify a PAGER to use when viewing markdown
+    #[clap(long, env = "PAGER", default_value = "less")]
+    pager: String,
+
+    /// Specify an EDITOR to use when editing markdown
+    #[clap(long, env = "EDITOR", default_value = "vi")]
+    editor: String,
+
+    /// Specify where to write the DB to
     #[clap(
         short,
         long,
@@ -34,15 +39,15 @@ struct Cli {
 #[derive(Debug, Subcommand)]
 #[clap(rename_all = "snake_case")]
 enum Subcommands {
-    // Specify paths to a directory (searched recursively) containing markdown files to parse
+    /// Re-index data
     Update {
-        // directory to recursively search
+        /// Directories to search recursively for markdown content
         paths: Vec<String>,
     },
 
-    // Specify a starting query for interactive query mode
+    /// Specify a starting query for interactive query mode
     Query {
-        // Query string
+        /// Query string
         query: String,
     },
 }
@@ -104,13 +109,12 @@ fn main() -> Result<(), Report> {
         }
         None => {
             interactive::setup_panic();
-
             let db = Database::new_with_path(&db_path, DB_CREATE_OR_OPEN)?;
             let iter = IntoIterator::into_iter(interactive::query(
                 db,
                 cli.verbosity,
-                String::from("less"),
-                String::from("vim"),
+                cli.pager,
+                cli.editor,
             )?); // strings is moved here
             for s in iter {
                 // next() moves a string out of the iter
@@ -126,8 +130,8 @@ fn main() -> Result<(), Report> {
             let iter = IntoIterator::into_iter(interactive::query(
                 db,
                 cli.verbosity,
-                String::from("less"),
-                String::from("vim"),
+                cli.pager,
+                cli.editor,
             )?); // strings is moved here
             for s in iter {
                 // next() moves a string out of the iter

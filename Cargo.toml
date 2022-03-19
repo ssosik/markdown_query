@@ -2,7 +2,16 @@
 name = "markdown_query"
 version = "0.3.0"
 authors = ["Steve Sosik <steve@little-fluffy.cloud>"]
-edition = "2018"
+edition = "2021"
+description = """
+mdq: Markdown+FrontMatter index/query tool
+Use xapian backend to index markdown files containing YAML frontmatter metadata,
+then provide an interactive CLI to query data. Use expressive language for
+querying. Query examples:
+    'foo AND bar AND tag:qux'
+    'foo AND bar AND NOT tag:qux'
+"""
+readme = "README.md"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [[bin]]
@@ -15,7 +24,7 @@ path = "src/lib.rs"
 
 [dependencies]
 chrono = "0.4.19"
-clap = { version = "3.1.6", features = ["derive"] }
+clap = { version = "3.1.6", features = ["derive", "env"] }
 color-eyre = "0.6.1"
 dirs = "4.0.0"
 eyre = "0.6.7"
