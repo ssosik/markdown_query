@@ -1,9 +1,7 @@
 mod interactive;
 use clap::{AppSettings, Parser, Subcommand};
 use color_eyre::Report;
-use dirs::home_dir;
 use markdown_query::document;
-use std::ffi::OsStr;
 use walkdir::WalkDir;
 use xapian_rusty::{Database, Stem, TermGenerator, WritableDatabase, BRASS, DB_CREATE_OR_OPEN};
 

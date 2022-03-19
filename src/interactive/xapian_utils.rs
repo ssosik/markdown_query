@@ -2,12 +2,12 @@ use crate::document::Document;
 use color_eyre::Report;
 use eyre::{eyre, Result};
 use nom::{
-    bytes::streaming::{is_not, tag, tag_no_case, take_until},
+    bytes::streaming::{tag, tag_no_case, take_until},
     character::complete::multispace1 as complete_multispace1,
-    character::streaming::{alphanumeric0, alphanumeric1, multispace0, multispace1, space0},
+    character::streaming::{alphanumeric1, multispace0, multispace1},
     combinator::{complete, recognize, value},
-    multi::{many0, many1},
-    sequence::{delimited, pair, separated_pair, tuple},
+    multi::many1,
+    sequence::{delimited, separated_pair, tuple},
     {branch::alt, IResult as NomIResult},
 };
 use std::convert::From;
