@@ -3,6 +3,7 @@ use clap::{AppSettings, Parser, Subcommand};
 use color_eyre::Report;
 use dirs::home_dir;
 use markdown_query::document;
+use std::ffi::OsStr;
 use walkdir::WalkDir;
 use xapian_rusty::{Database, Stem, TermGenerator, WritableDatabase, BRASS, DB_CREATE_OR_OPEN};
 
@@ -12,7 +13,7 @@ use xapian_rusty::{Database, Stem, TermGenerator, WritableDatabase, BRASS, DB_CR
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]
 #[clap(global_setting(AppSettings::UseLongFormatForHelpSubcommand))]
-struct Cli {
+struct Cli<'a> {
     // TODO use https://docs.rs/clap-verbosity-flag/1.0.0/clap_verbosity_flag/
     // Set level of verbosity
     #[clap(short, long, parse(from_occurrences))]
@@ -26,25 +27,26 @@ struct Cli {
         value_name = "XAPIAN DB DIR",
         default_value = "~/.mdq-data"
     )]
-    db_path: usize,
+    db_path: &'a OsStr,
 
     #[clap(subcommand)]
-    subcommand: Option<Subcommands>,
+    subcommand: Option<Subcommands<'a>>,
 }
 
 #[derive(Debug, Subcommand)]
 #[clap(rename_all = "snake_case")]
-enum Subcommands {
+enum Subcommands<'a> {
     // Specify paths to a directory (searched recursively) containing markdown files to parse
     Update {
         // directory to recursively search
-        paths: Vec<OsStr>,
+        #[clap(parse(from_os_str))]
+        paths: Vec<&'a OsStr>,
     },
 
     // Specify a starting query for interactive query mode
     Query {
         // Query string
-        query: Str,
+        query: String,
     },
 }
 

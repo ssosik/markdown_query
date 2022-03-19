@@ -683,7 +683,7 @@ pub fn query_db(mut enq: Enquire, mut q: Query) -> Result<Vec<Document>, Report>
     Ok(matches)
 }
 
-fn take_up_to_operator(input: &str) -> NomIResult<&str, &str> {
+fn take_up_to_operator(input: &[u8]) -> NomIResult<&[u8], &[u8]> {
     alt((
         complete(take_until("AND MAYBE")),
         complete(take_until("AND NOT")),
