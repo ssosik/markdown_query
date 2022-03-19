@@ -1,6 +1,6 @@
 mod xapian_utils;
-use ansi_to_tui::ansi_to_text;
 use crate::document;
+use ansi_to_tui::ansi_to_text;
 use color_eyre::Report;
 use eyre::bail;
 use std::io::{stdout, Write};
@@ -12,8 +12,8 @@ use syntect::util::{as_24_bit_terminal_escaped, LinesWithEndings};
 use tempfile::Builder;
 use termion::{event::Key, raw::IntoRawMode, screen::AlternateScreen};
 use tui::{
-    backend::TermionBackend,
     backend::CrosstermBackend,
+    backend::TermionBackend,
     layout::{Constraint, Direction, Layout},
     style::{Color, Modifier, Style},
     text::{Span, Spans, Text},
@@ -135,7 +135,6 @@ pub fn query(
 
     let ps = SyntaxSet::load_defaults_newlines();
     let ts = ThemeSet::load_defaults();
-
 
     let syntax = ps.find_syntax_by_extension("md").unwrap();
     // TODO make themes configurable
