@@ -1,4 +1,5 @@
 mod xapian_utils;
+use ansi_to_tui::ansi_to_text;
 use crate::document;
 use color_eyre::Report;
 use eyre::bail;
@@ -11,10 +12,11 @@ use syntect::util::{as_24_bit_terminal_escaped, LinesWithEndings};
 use tempfile::Builder;
 use termion::{event::Key, raw::IntoRawMode, screen::AlternateScreen};
 use tui::{
+    backend::TermionBackend,
     backend::CrosstermBackend,
     layout::{Constraint, Direction, Layout},
     style::{Color, Modifier, Style},
-    text::{Span, Spans},
+    text::{Span, Spans, Text},
     widgets::{Block, Borders, List, ListItem, ListState, Paragraph, Wrap},
 };
 use xapian_rusty::Database;
@@ -126,7 +128,7 @@ pub fn query(
     pager: String,
     editor: String,
 ) -> Result<Vec<String>, Report> {
-    let mut tui = tui::Terminal::new(CrosstermBackend::new(AlternateScreen::from(
+    let mut tui = tui::Terminal::new(TermionBackend::new(AlternateScreen::from(
         stdout().into_raw_mode().unwrap(),
     )))
     .unwrap();
@@ -134,8 +136,10 @@ pub fn query(
     let ps = SyntaxSet::load_defaults_newlines();
     let ts = ThemeSet::load_defaults();
 
+
     let syntax = ps.find_syntax_by_extension("md").unwrap();
     // TODO make themes configurable
+    // TODO usr HighlightFile here instead of lines? https://docs.rs/syntect/latest/syntect/easy/struct.HighlightFile.html
     let mut highlighter = HighlightLines::new(syntax, &ts.themes["Solarized (dark)"]);
 
     // Setup event handlers
@@ -193,10 +197,15 @@ pub fn query(
                 let escaped = as_24_bit_terminal_escaped(&ranges[..], true);
                 preview_text.push_str(&escaped);
             }
-            //let preview_text = Paragraph::new(ansi_to_text(preview_text.bytes()).unwrap())
-            let preview_text = Paragraph::new(app.preview.as_ref())
-                .block(Block::default().borders(Borders::NONE))
-                .wrap(Wrap { trim: true });
+            let preview_text = ansi_to_text(preview_text.bytes()).unwrap();
+            let preview_text: Paragraph = Paragraph::new::<Text>(preview_text);
+            //let preview_text = Span::raw(ansi_to_text(preview_text.bytes()).unwrap());
+            //let preview_text = Spans::from(ansi_to_text(preview_text.bytes()).unwrap());
+            //let preview_text = Paragraph::new(preview_text.lines)
+            ////let preview_text = Paragraph::new(app.preview.as_ref())
+            ////let preview_text = Paragraph::new(preview_text)
+            //    .block(Block::default().borders(Borders::NONE))
+            //    .wrap(Wrap { trim: true });
             f.render_widget(preview_text, screen[1]);
 
             // Output area where match titles are displayed
@@ -361,7 +370,7 @@ pub fn query(
                                 .status()
                                 .expect("failed to execute process");
                             events = event::Events::new();
-                            tui = tui::Terminal::new(CrosstermBackend::new(AlternateScreen::from(
+                            tui = tui::Terminal::new(TermionBackend::new(AlternateScreen::from(
                                 stdout().into_raw_mode().unwrap(),
                             )))
                             .unwrap();
@@ -392,7 +401,7 @@ pub fn query(
                                 .status()
                                 .expect("failed to execute process");
                             events = event::Events::new();
-                            tui = tui::Terminal::new(CrosstermBackend::new(AlternateScreen::from(
+                            tui = tui::Terminal::new(TermionBackend::new(AlternateScreen::from(
                                 stdout().into_raw_mode().unwrap(),
                             )))
                             .unwrap();

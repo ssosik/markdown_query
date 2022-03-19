@@ -36,6 +36,8 @@ usable.
 
 # Wishlist of TODOs
 
+* [ ] fix preview output
+* [ ] remove remaining occurences of 'meilizet'
 * [ ] Colorize preview
 * [ ] Support platforms besides linux, mac
 * [ ] Delete entries from local cache
