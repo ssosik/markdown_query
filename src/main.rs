@@ -1,5 +1,6 @@
 mod interactive;
-use clap::{AppSettings, Parser, Subcommand};
+use clap::{Parser, Subcommand};
+use std::ffi::OsStr;
 use color_eyre::Report;
 use markdown_query::document;
 use walkdir::WalkDir;
@@ -10,7 +11,6 @@ use xapian_rusty::{Database, Stem, TermGenerator, WritableDatabase, BRASS, DB_CR
 /// an interactive CLI to query data. Use expressive language like 'foo AND bar AND tag:qux'
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]
-#[clap(global_setting(AppSettings::UseLongFormatForHelpSubcommand))]
 struct Cli {
     // TODO use https://docs.rs/clap-verbosity-flag/1.0.0/clap_verbosity_flag/
     // Set level of verbosity
@@ -18,15 +18,14 @@ struct Cli {
     verbosity: u8,
 
     // Specify where to write the DB to
-    // TODO Use OsStr here instead of String
     #[clap(
         short,
         long,
-        //parse(from_os_str),
+        parse(from_os_str),
         value_name = "XAPIAN DB DIR",
         default_value = "~/.mdq-data"
     )]
-    db_path: String,
+    db_path: Box<OsStr>,
 
     #[clap(subcommand)]
     subcommand: Option<Subcommands>,
@@ -60,6 +59,7 @@ fn setup() -> Result<(), Report> {
 fn main() -> Result<(), Report> {
     // Parse CLI Arguments
     let cli = Cli::parse();
+    let db_path = cli.db_path.to_str().unwrap();
 
     setup()?;
 
@@ -68,7 +68,7 @@ fn main() -> Result<(), Report> {
             println!("None!");
         }
         Some(Subcommands::Update { ref paths }) => {
-            let mut db = WritableDatabase::new(cli.db_path.as_str(), BRASS, DB_CREATE_OR_OPEN)?;
+            let mut db = WritableDatabase::new(db_path, BRASS, DB_CREATE_OR_OPEN).expect("Could not open db for writing");
             let mut tg = TermGenerator::new()?;
             let mut stemmer = Stem::new("en")?;
             tg.set_stemmer(&mut stemmer)?;
@@ -107,7 +107,7 @@ fn main() -> Result<(), Report> {
         Some(Subcommands::Query { ref query }) => {
             interactive::setup_panic();
 
-            let db = Database::new_with_path(cli.db_path.as_str(), DB_CREATE_OR_OPEN)?;
+            let db = Database::new_with_path(db_path, DB_CREATE_OR_OPEN)?;
             let iter = IntoIterator::into_iter(interactive::query(
                 db,
                 cli.verbosity,
