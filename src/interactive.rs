@@ -353,7 +353,7 @@ pub fn query(
                             // TODO get rid of the random bytes here and use the doc id as part of
                             // the prefix
                             let mut tf = Builder::new()
-                                .prefix("meilizet-")
+                                .prefix("mdq-")
                                 .suffix(".md")
                                 .rand_bytes(5)
                                 .tempfile()?;
@@ -383,7 +383,7 @@ pub fn query(
                             // TODO get rid of the random bytes here and use the doc id as part of
                             // the prefix
                             let mut tf = Builder::new()
-                                .prefix("meilizet-")
+                                .prefix("mdq-")
                                 .suffix(".md")
                                 .rand_bytes(5)
                                 .tempfile()?;
