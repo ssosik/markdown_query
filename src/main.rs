@@ -59,7 +59,7 @@ fn setup() -> Result<(), Report> {
 fn main() -> Result<(), Report> {
     // Parse CLI Arguments
     let cli = Cli::parse();
-    let db_path = cli.db_path.to_str().unwrap();
+    let db_path: String = shellexpand::tilde(cli.db_path.to_str().unwrap()).into();
 
     setup()?;
 
@@ -68,7 +68,7 @@ fn main() -> Result<(), Report> {
             println!("None!");
         }
         Some(Subcommands::Update { ref paths }) => {
-            let mut db = WritableDatabase::new(db_path, BRASS, DB_CREATE_OR_OPEN)
+            let mut db = WritableDatabase::new(&db_path, BRASS, DB_CREATE_OR_OPEN)
                 .expect("Could not open db for writing");
             let mut tg = TermGenerator::new()?;
             let mut stemmer = Stem::new("en")?;
@@ -108,7 +108,7 @@ fn main() -> Result<(), Report> {
         Some(Subcommands::Query { ref query }) => {
             interactive::setup_panic();
 
-            let db = Database::new_with_path(db_path, DB_CREATE_OR_OPEN)?;
+            let db = Database::new_with_path(&db_path, DB_CREATE_OR_OPEN)?;
             let iter = IntoIterator::into_iter(interactive::query(
                 db,
                 cli.verbosity,
