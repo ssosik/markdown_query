@@ -15,7 +15,7 @@ struct Cli {
     // TODO use https://docs.rs/clap-verbosity-flag/1.0.0/clap_verbosity_flag/
     // Set level of verbosity
     #[clap(short, long, parse(from_occurrences))]
-    verbose: usize,
+    verbosity: u8,
 
     // Specify where to write the DB to
     // TODO Use OsStr here instead of String
@@ -68,64 +68,58 @@ fn main() -> Result<(), Report> {
             println!("None!");
         }
         Some(Subcommands::Update { ref paths }) => {
-            dbg!(paths);
+            let mut db = WritableDatabase::new(cli.db_path.as_str(), BRASS, DB_CREATE_OR_OPEN)?;
+            let mut tg = TermGenerator::new()?;
+            let mut stemmer = Stem::new("en")?;
+            tg.set_stemmer(&mut stemmer)?;
+
+            for path in paths {
+                let walker = WalkDir::new(path).into_iter();
+                for entry in walker.filter_entry(|e| {
+                    !e.file_name()
+                        .to_str()
+                        .map(|s| s.starts_with('.'))
+                        .unwrap_or(false)
+                }) {
+                    match entry {
+                        Ok(path) => {
+                            let path = path.path();
+                            if path.extension().is_none() || path.extension().unwrap() != "md" {
+                                continue;
+                            }
+                            if let Ok(doc) = document::Document::parse_file(path) {
+                                doc.update_index(&mut db, &mut tg)?;
+                                if cli.verbosity > 0 {
+                                    println!("✅ {}", doc.filename);
+                                }
+                            } else {
+                                eprintln!("❌ Failed to load file {}", path.display());
+                            }
+                        }
+
+                        Err(e) => eprintln!("❌ {:?}", e),
+                    }
+                }
+
+                db.commit()?;
+            }
         }
         Some(Subcommands::Query { ref query }) => {
-            dbg!(query);
+            interactive::setup_panic();
+
+            let db = Database::new_with_path(cli.db_path.as_str(), DB_CREATE_OR_OPEN)?;
+            let iter = IntoIterator::into_iter(interactive::query(
+                db,
+                cli.verbosity,
+                String::from("less"),
+                String::from("vim"),
+            )?); // strings is moved here
+            for s in iter {
+                // next() moves a string out of the iter
+                println!("{}", s);
+            }
         }
     }
-
-    //// If requested, reindex the data
-    //if let Some(cli) = cli.subcommand_matches("update") {
-    //    let mut db = WritableDatabase::new(cli.db_path, BRASS, DB_CREATE_OR_OPEN)?;
-    //    let mut tg = TermGenerator::new()?;
-    //    let mut stemmer = Stem::new("en")?;
-    //    tg.set_stemmer(&mut stemmer)?;
-
-    //    let walker = WalkDir::new(cli.value_of("path").unwrap()).into_iter();
-    //    for entry in walker.filter_entry(|e| {
-    //        !e.file_name()
-    //            .to_str()
-    //            .map(|s| s.starts_with('.'))
-    //            .unwrap_or(false)
-    //    }) {
-    //        match entry {
-    //            Ok(path) => {
-    //                let path = path.path();
-    //                if path.extension().is_none() || path.extension().unwrap() != "md" {
-    //                    continue;
-    //                }
-    //                if let Ok(doc) = document::Document::parse_file(path) {
-    //                    doc.update_index(&mut db, &mut tg)?;
-    //                    if cli.verbosity > 0 {
-    //                        println!("✅ {}", doc.filename);
-    //                    }
-    //                } else {
-    //                    eprintln!("❌ Failed to load file {}", path.display());
-    //                }
-    //            }
-
-    //            Err(e) => eprintln!("❌ {:?}", e),
-    //        }
-    //    }
-
-    //    db.commit()?;
-    //} else {
-    //    // Else, query the DB
-    //    interactive::setup_panic();
-
-    //    let db = Database::new_with_path(db_path, DB_CREATE_OR_OPEN)?;
-    //    let iter = IntoIterator::into_iter(interactive::query(
-    //        db,
-    //        3,
-    //        String::from("less"),
-    //        String::from("vim"),
-    //    )?); // strings is moved here
-    //    for s in iter {
-    //        // next() moves a string out of the iter
-    //        println!("{}", s);
-    //    }
-    //}
 
     Ok(())
 }
