@@ -583,6 +583,7 @@ pub fn parse_user_query(mut qstr: &str) -> Result<Query, Report> {
     let mut stem = Stem::new("en")?;
     qp.set_stemmer(&mut stem)?;
 
+    // TODO make these configurable
     let flags = FlagBoolean as i16
         | FlagPhrase as i16
         | FlagLovehate as i16
@@ -612,8 +613,7 @@ pub fn parse_user_query(mut qstr: &str) -> Result<Query, Report> {
         operator = op;
         qstr = *rest;
     } else {
-        // This shouldn't ever happen
-        panic!("Couldn't match leading operator in {}", qstr);
+        unreachable!("Couldn't match leading operator in {}", qstr);
     }
 
     let mut depth = 0;
@@ -645,8 +645,7 @@ pub fn parse_user_query(mut qstr: &str) -> Result<Query, Report> {
             operator = op;
             qstr = *rest;
         } else {
-            // This shouldn't ever happen
-            panic!("Couldn't match leading operator in {}", qstr);
+            unreachable!("Couldn't match leading operator in {}", qstr);
         }
 
         if depth > 50 {
