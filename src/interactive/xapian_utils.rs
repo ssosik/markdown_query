@@ -1,15 +1,14 @@
 use crate::document::Document;
 use color_eyre::Report;
 use eyre::{eyre, Result};
-#[allow(unused)]
 use nom::{
     bytes::streaming::{is_not, tag, tag_no_case, take_until},
     character::complete::multispace1 as complete_multispace1,
     character::streaming::{alphanumeric0, alphanumeric1, multispace0, multispace1, space0},
-    combinator::{recognize, value},
+    combinator::{complete, recognize, value},
     multi::{many0, many1},
     sequence::{delimited, pair, separated_pair, tuple},
-    {branch::alt, complete}, // {IResult},
+    {branch::alt, IResult as NomIResult},
 };
 use std::convert::From;
 use std::fmt;
@@ -684,33 +683,41 @@ pub fn query_db(mut enq: Enquire, mut q: Query) -> Result<Vec<Document>, Report>
     Ok(matches)
 }
 
-// TODO is there a better way to handle case insensitity here?
-named!(
-    take_up_to_operator,
-    alt!(
-        complete!(take_until!("AND MAYBE"))
-            | complete!(take_until!("and maybe"))
-            | complete!(take_until!("AND NOT"))
-            | complete!(take_until!("and not"))
-            | complete!(take_until!("SYNONYM"))
-            | complete!(take_until!("synonym"))
-            | complete!(take_until!("FILTER"))
-            | complete!(take_until!("filter"))
-            | complete!(take_until!("PHRASE"))
-            | complete!(take_until!("phrase"))
-            | complete!(take_until!("SCALED"))
-            | complete!(take_until!("scaled"))
-            | complete!(take_until!("ELITE"))
-            | complete!(take_until!("elite"))
-            | complete!(take_until!("RANGE"))
-            | complete!(take_until!("range"))
-            | complete!(take_until!("NEAR"))
-            | complete!(take_until!("near"))
-            | complete!(take_until!("AND"))
-            | complete!(take_until!("and"))
-            | complete!(take_until!("XOR"))
-            | complete!(take_until!("xor"))
-            | complete!(take_until!("OR"))
-            | complete!(take_until!("or"))
-    )
-);
+fn take_up_to_operator(input: &str) -> NomIResult<&str, &str> {
+    alt((
+        complete(take_until("AND MAYBE")),
+        complete(take_until("AND NOT")),
+        complete(take_until("OR")),
+    ))(input)
+}
+
+//// TODO is there a better way to handle case insensitity here?
+//named!(
+//    take_up_to_operator,
+//    alt!(
+//        complete!(take_until!("AND MAYBE"))
+//            | complete!(take_until!("and maybe"))
+//            | complete!(take_until!("AND NOT"))
+//            | complete!(take_until!("and not"))
+//            | complete!(take_until!("SYNONYM"))
+//            | complete!(take_until!("synonym"))
+//            | complete!(take_until!("FILTER"))
+//            | complete!(take_until!("filter"))
+//            | complete!(take_until!("PHRASE"))
+//            | complete!(take_until!("phrase"))
+//            | complete!(take_until!("SCALED"))
+//            | complete!(take_until!("scaled"))
+//            | complete!(take_until!("ELITE"))
+//            | complete!(take_until!("elite"))
+//            | complete!(take_until!("RANGE"))
+//            | complete!(take_until!("range"))
+//            | complete!(take_until!("NEAR"))
+//            | complete!(take_until!("near"))
+//            | complete!(take_until!("AND"))
+//            | complete!(take_until!("and"))
+//            | complete!(take_until!("XOR"))
+//            | complete!(take_until!("xor"))
+//            | complete!(take_until!("OR"))
+//            | complete!(take_until!("or"))
+//    )
+//);
