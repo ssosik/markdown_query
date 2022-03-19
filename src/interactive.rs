@@ -12,7 +12,6 @@ use syntect::util::{as_24_bit_terminal_escaped, LinesWithEndings};
 use tempfile::Builder;
 use termion::{event::Key, raw::IntoRawMode, screen::AlternateScreen};
 use tui::{
-    backend::CrosstermBackend,
     backend::TermionBackend,
     layout::{Constraint, Direction, Layout},
     style::{Color, Modifier, Style},
