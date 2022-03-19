@@ -1,6 +1,5 @@
 mod xapian_utils;
 use crate::document;
-
 use color_eyre::Report;
 use eyre::bail;
 use std::io::{stdout, Write};
