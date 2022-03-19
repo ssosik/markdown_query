@@ -36,7 +36,8 @@ usable.
 
 # Wishlist of TODOs
 
-* [ ] Support Windows, ARM, any other platforms needed
+* [ ] Colorize preview
+* [ ] Support platforms besides linux, mac
 * [ ] Delete entries from local cache
 * [ ] Query/filter on time range
 * [ ] Vim Plugin
