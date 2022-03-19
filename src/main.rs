@@ -64,9 +64,6 @@ fn main() -> Result<(), Report> {
     setup()?;
 
     match cli.subcommand {
-        None => {
-            println!("None!");
-        }
         Some(Subcommands::Update { ref paths }) => {
             let mut db = WritableDatabase::new(&db_path, BRASS, DB_CREATE_OR_OPEN)
                 .expect("Could not open db for writing");
@@ -105,7 +102,24 @@ fn main() -> Result<(), Report> {
                 db.commit()?;
             }
         }
-        Some(Subcommands::Query { ref query }) => {
+        None => {
+            interactive::setup_panic();
+
+            let db = Database::new_with_path(&db_path, DB_CREATE_OR_OPEN)?;
+            let iter = IntoIterator::into_iter(interactive::query(
+                db,
+                cli.verbosity,
+                String::from("less"),
+                String::from("vim"),
+            )?); // strings is moved here
+            for s in iter {
+                // next() moves a string out of the iter
+                println!("{}", s);
+            }
+        }
+        // TODO: user passed in a starting query, use it
+        //Some(Subcommands::Query { ref query }) => {
+        Some(Subcommands::Query { query: _ }) => {
             interactive::setup_panic();
 
             let db = Database::new_with_path(&db_path, DB_CREATE_OR_OPEN)?;
