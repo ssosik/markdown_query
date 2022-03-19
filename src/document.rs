@@ -18,6 +18,7 @@ pub enum SerializationType {
     Storage,
     Disk,
     Human,
+    Preview,
 }
 
 impl Default for SerializationType {
@@ -227,7 +228,9 @@ where
 
 impl fmt::Display for Document {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        if self.serialization_type == SerializationType::Human {
+        if self.serialization_type == SerializationType::Human
+            || self.serialization_type == SerializationType::Preview
+        {
             write!(f, "{}", self.body)
         } else {
             let yaml = serde_yaml::to_string(&self).unwrap();
@@ -245,7 +248,7 @@ impl Serialize for Document {
         let mut s = match self.serialization_type {
             SerializationType::Storage => serializer.serialize_struct("Document", 14)?,
             SerializationType::Disk => serializer.serialize_struct("Document", 12)?,
-            SerializationType::Human => {
+            SerializationType::Human | SerializationType::Preview => {
                 // The Display trait implementation above handles displaying just the
                 // document body, don't need to serialize any of the doc metadata
                 return serializer.serialize_struct("Document", 0)?.end();

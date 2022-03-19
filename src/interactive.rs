@@ -423,7 +423,11 @@ pub fn query(
                     match xapian_utils::parse_user_query(&inp) {
                         Ok(query) => {
                             //app.query = query.get_description();
-                            app.matches = xapian_utils::query_db(enq, query)?;
+                            app.matches = xapian_utils::query_db(
+                                enq,
+                                query,
+                                document::SerializationType::Preview,
+                            )?;
                         }
                         Err(e) => {
                             app.error = e.to_string();
