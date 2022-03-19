@@ -1,8 +1,8 @@
 mod interactive;
 use clap::{Parser, Subcommand};
-use std::ffi::OsStr;
 use color_eyre::Report;
 use markdown_query::document;
+use std::ffi::OsStr;
 use walkdir::WalkDir;
 use xapian_rusty::{Database, Stem, TermGenerator, WritableDatabase, BRASS, DB_CREATE_OR_OPEN};
 
@@ -68,7 +68,8 @@ fn main() -> Result<(), Report> {
             println!("None!");
         }
         Some(Subcommands::Update { ref paths }) => {
-            let mut db = WritableDatabase::new(db_path, BRASS, DB_CREATE_OR_OPEN).expect("Could not open db for writing");
+            let mut db = WritableDatabase::new(db_path, BRASS, DB_CREATE_OR_OPEN)
+                .expect("Could not open db for writing");
             let mut tg = TermGenerator::new()?;
             let mut stemmer = Stem::new("en")?;
             tg.set_stemmer(&mut stemmer)?;
