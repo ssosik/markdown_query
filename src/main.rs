@@ -13,34 +13,34 @@ use xapian_rusty::{Database, Stem, TermGenerator, WritableDatabase, BRASS, DB_CR
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]
 #[clap(global_setting(AppSettings::UseLongFormatForHelpSubcommand))]
-struct Cli<'a> {
+struct Cli {
     // TODO use https://docs.rs/clap-verbosity-flag/1.0.0/clap_verbosity_flag/
     // Set level of verbosity
     #[clap(short, long, parse(from_occurrences))]
     verbose: usize,
 
     // Specify where to write the DB to
+    // TODO Use OsStr here instead of String
     #[clap(
         short,
         long,
-        parse(from_os_str),
+        //parse(from_os_str),
         value_name = "XAPIAN DB DIR",
         default_value = "~/.mdq-data"
     )]
-    db_path: &'a OsStr,
+    db_path: String,
 
     #[clap(subcommand)]
-    subcommand: Option<Subcommands<'a>>,
+    subcommand: Option<Subcommands>,
 }
 
 #[derive(Debug, Subcommand)]
 #[clap(rename_all = "snake_case")]
-enum Subcommands<'a> {
+enum Subcommands {
     // Specify paths to a directory (searched recursively) containing markdown files to parse
     Update {
         // directory to recursively search
-        #[clap(parse(from_os_str))]
-        paths: Vec<&'a OsStr>,
+        paths: Vec<String>,
     },
 
     // Specify a starting query for interactive query mode
