@@ -48,3 +48,6 @@ yaml-rust = "0.4.5"
 ansi-to-tui = { git = "https://github.com/uttarayan21/ansi-to-tui", branch = "master" }
 syntect = "4.6.0"
 tempfile = "3.3.0"
+clap-verbosity-flag = "1.0.0"
+env_logger = "0.9.0"
+log = "0.4.14"

@@ -3,6 +3,7 @@ use crate::document;
 use ansi_to_tui::ansi_to_text;
 use color_eyre::Report;
 use eyre::bail;
+use log::{log_enabled, Level};
 use std::io::{stdout, Write};
 use std::process::Command;
 use syntect::easy::HighlightLines;
@@ -121,12 +122,7 @@ pub fn setup_panic() {
 }
 
 /// Interactive query interface
-pub fn query(
-    mut db: Database,
-    verbosity: u8,
-    pager: String,
-    editor: String,
-) -> Result<Vec<String>, Report> {
+pub fn query(mut db: Database, pager: String, editor: String) -> Result<Vec<String>, Report> {
     let mut tui = tui::Terminal::new(CrosstermBackend::new(AlternateScreen::from(
         stdout().into_raw_mode().unwrap(),
     )))
@@ -149,7 +145,7 @@ pub fn query(
     loop {
         // Draw UI
         if let Err(e) = tui.draw(|f| {
-            let main = if verbosity > 0 {
+            let main = if log_enabled!(Level::Debug) {
                 // Enable debug and error areas
                 Layout::default()
                     .direction(Direction::Vertical)
@@ -265,7 +261,7 @@ pub fn query(
                 interactive[app.inp_idx + 1].y + 1,
             );
 
-            if verbosity > 0 {
+            if log_enabled!(Level::Debug) {
                 // Area to display debug messages
                 let debug = Paragraph::new(app.debug.as_ref())
                     .style(Style::default().fg(Color::Green).bg(Color::Black))

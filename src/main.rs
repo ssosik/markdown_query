@@ -1,6 +1,8 @@
 mod interactive;
 use clap::{Parser, Subcommand};
+use clap_verbosity_flag::{InfoLevel, Verbosity};
 use color_eyre::Report;
+use log::{debug, error};
 use markdown_query::document;
 use std::ffi::OsStr;
 use walkdir::WalkDir;
@@ -9,10 +11,9 @@ use xapian_rusty::{Database, Stem, TermGenerator, WritableDatabase, BRASS, DB_CR
 #[derive(Parser, Debug)]
 #[clap(author, version, about)]
 struct Cli {
-    // TODO use https://docs.rs/clap-verbosity-flag/1.0.0/clap_verbosity_flag/
     /// Set level of verbosity
-    #[clap(short, long, parse(from_occurrences))]
-    verbosity: u8,
+    #[clap(flatten)]
+    verbose: Verbosity<InfoLevel>,
 
     /// Specify a PAGER to use when viewing markdown
     #[clap(long, env = "PAGER", default_value = "less")]
@@ -64,6 +65,10 @@ fn setup() -> Result<(), Report> {
 fn main() -> Result<(), Report> {
     // Parse CLI Arguments
     let cli = Cli::parse();
+    env_logger::Builder::new()
+        .filter_level(cli.verbose.log_level_filter())
+        .init();
+
     let db_path: String = shellexpand::tilde(cli.db_path.to_str().unwrap()).into();
 
     setup()?;
@@ -92,15 +97,13 @@ fn main() -> Result<(), Report> {
                             }
                             if let Ok(doc) = document::Document::parse_file(path) {
                                 doc.update_index(&mut db, &mut tg)?;
-                                if cli.verbosity > 0 {
-                                    println!("✅ {}", doc.filename);
-                                }
+                                debug!("✅ {}", doc.filename);
                             } else {
-                                eprintln!("❌ Failed to load file {}", path.display());
+                                error!("❌ Failed to load file {}", path.display());
                             }
                         }
 
-                        Err(e) => eprintln!("❌ {:?}", e),
+                        Err(e) => error!("❌ {:?}", e),
                     }
                 }
 
@@ -110,12 +113,7 @@ fn main() -> Result<(), Report> {
         None => {
             interactive::setup_panic();
             let db = Database::new_with_path(&db_path, DB_CREATE_OR_OPEN)?;
-            let iter = IntoIterator::into_iter(interactive::query(
-                db,
-                cli.verbosity,
-                cli.pager,
-                cli.editor,
-            )?); // strings is moved here
+            let iter = IntoIterator::into_iter(interactive::query(db, cli.pager, cli.editor)?); // strings is moved here
             for s in iter {
                 // next() moves a string out of the iter
                 println!("{}", s);
@@ -127,12 +125,7 @@ fn main() -> Result<(), Report> {
             interactive::setup_panic();
 
             let db = Database::new_with_path(&db_path, DB_CREATE_OR_OPEN)?;
-            let iter = IntoIterator::into_iter(interactive::query(
-                db,
-                cli.verbosity,
-                cli.pager,
-                cli.editor,
-            )?); // strings is moved here
+            let iter = IntoIterator::into_iter(interactive::query(db, cli.pager, cli.editor)?); // strings is moved here
             for s in iter {
                 // next() moves a string out of the iter
                 println!("{}", s);
