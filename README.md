@@ -37,6 +37,7 @@ usable.
 # Wishlist of TODOs
 
 * [ ] fix preview output
+* [ ] use pest for query parsing
 * [ ] Colorize preview
 * [ ] Support platforms besides linux, mac
 * [ ] Delete entries from local cache

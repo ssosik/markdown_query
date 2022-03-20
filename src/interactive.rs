@@ -48,7 +48,8 @@ impl TerminalApp {
     pub fn get_selected(&mut self) -> Vec<String> {
         let ret: Vec<String> = Vec::new();
         if let Some(i) = self.selected_state.selected() {
-            vec![self.matches[i].id.to_owned()]
+            //vec![self.matches[i].full_path.clone().into_string().unwrap()]
+            vec![self.matches[i].filename.to_owned()]
         } else {
             ret
         }
@@ -429,60 +430,6 @@ pub fn query(mut db: Database, pager: String, editor: String) -> Result<Vec<Stri
                             app.error = e.to_string();
                         }
                     };
-                    //let mut q = api::ApiQuery::new();
-                    //q.query = Some(app.query_input.to_owned());
-
-                    //q.process_filter(app.filter_input.to_owned());
-
-                    //app.debug = serde_json::to_string(&q).unwrap();
-
-                    //// Split up the JSON decoding into two steps.
-                    //// 1.) Get the text of the body.
-                    //let response_body = match client
-                    //    .post(uri.as_ref())
-                    //    .body::<String>(serde_json::to_string(&q).unwrap())
-                    //    .header(CONTENT_TYPE, "application/json")
-                    //    .send()
-                    //{
-                    //    Ok(resp) => {
-                    //        if !resp.status().is_success() {
-                    //            app.error = format!("Request failed: {:?}", resp);
-                    //            continue;
-                    //        }
-                    //        match resp.text() {
-                    //            Ok(text) => text,
-                    //            Err(e) => {
-                    //                app.error = format!("resp.text() failed: {:?}", e);
-                    //                continue;
-                    //            }
-                    //        }
-                    //    }
-                    //    Err(e) => {
-                    //        app.error = format!("Send failed: {:?}", e);
-                    //        continue;
-                    //    }
-                    //};
-
-                    //// 2.) Parse the results as JSON.
-                    //match serde_json::from_str::<api::ApiResponse>(&response_body) {
-                    //    Ok(mut resp) => {
-                    //        app.matches = resp
-                    //            .hits
-                    //            .iter_mut()
-                    //            .map(|mut m| {
-                    //                m.serialization_type = document::SerializationType::Human;
-                    //                m.to_owned()
-                    //            })
-                    //            .collect::<Vec<_>>();
-                    //        app.error = String::from("");
-                    //    }
-                    //    Err(e) => {
-                    //        app.error = format!(
-                    //            "Could not deserialize body from: {}; error: {:?}",
-                    //            response_body, e
-                    //        )
-                    //    }
-                    //};
                 }
             }
         }
