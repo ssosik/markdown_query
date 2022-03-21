@@ -113,19 +113,23 @@ fn main() -> Result<(), Report> {
         None => {
             interactive::setup_panic();
             let db = Database::new_with_path(&db_path, DB_CREATE_OR_OPEN)?;
-            let iter = IntoIterator::into_iter(interactive::query(db, cli.pager, cli.editor)?); // strings is moved here
+            let iter = IntoIterator::into_iter(interactive::query(
+                db,
+                cli.pager,
+                cli.editor,
+                String::from(""),
+            )?); // strings is moved here
             for s in iter {
                 // next() moves a string out of the iter
                 println!("{}", s);
             }
         }
-        // TODO: user passed in a starting query, use it
-        //Some(Subcommands::Query { ref query }) => {
-        Some(Subcommands::Query { query: _ }) => {
+        Some(Subcommands::Query { query }) => {
             interactive::setup_panic();
 
             let db = Database::new_with_path(&db_path, DB_CREATE_OR_OPEN)?;
-            let iter = IntoIterator::into_iter(interactive::query(db, cli.pager, cli.editor)?); // strings is moved here
+            let iter =
+                IntoIterator::into_iter(interactive::query(db, cli.pager, cli.editor, query)?); // strings is moved here
             for s in iter {
                 // next() moves a string out of the iter
                 println!("{}", s);

@@ -90,9 +90,9 @@ impl TerminalApp {
         self.selected_state.select(Some(i));
     }
 
-    fn new() -> TerminalApp {
+    fn new(starting_query: String) -> TerminalApp {
         TerminalApp {
-            query_input: String::new(),
+            query_input: starting_query,
             filter_input: String::new(),
             preview: String::new(),
             matches: Vec::new(),
@@ -123,7 +123,12 @@ pub fn setup_panic() {
 }
 
 /// Interactive query interface
-pub fn query(mut db: Database, pager: String, editor: String) -> Result<Vec<String>, Report> {
+pub fn query(
+    mut db: Database,
+    pager: String,
+    editor: String,
+    starting_query: String,
+) -> Result<Vec<String>, Report> {
     let mut tui = tui::Terminal::new(CrosstermBackend::new(AlternateScreen::from(
         stdout().into_raw_mode().unwrap(),
     )))
@@ -141,7 +146,7 @@ pub fn query(mut db: Database, pager: String, editor: String) -> Result<Vec<Stri
     let mut events = event::Events::new();
 
     // Create default app state
-    let mut app = TerminalApp::new();
+    let mut app = TerminalApp::new(starting_query);
 
     loop {
         // Draw UI
@@ -192,15 +197,7 @@ pub fn query(mut db: Database, pager: String, editor: String) -> Result<Vec<Stri
                 let escaped = as_24_bit_terminal_escaped(&ranges[..], true);
                 preview_text.push_str(&escaped);
             }
-            let preview_text = ansi_to_text(preview_text.bytes()).unwrap();
-            let preview_text: Paragraph = Paragraph::new::<Text>(preview_text);
-            //let preview_text = Span::raw(ansi_to_text(preview_text.bytes()).unwrap());
-            //let preview_text = Spans::from(ansi_to_text(preview_text.bytes()).unwrap());
-            //let preview_text = Paragraph::new(preview_text.lines)
-            ////let preview_text = Paragraph::new(app.preview.as_ref())
-            ////let preview_text = Paragraph::new(preview_text)
-            //    .block(Block::default().borders(Borders::NONE))
-            //    .wrap(Wrap { trim: true });
+            let preview_text = Paragraph::new::<Text>(ansi_to_text(preview_text.bytes()).unwrap());
             f.render_widget(preview_text, screen[1]);
 
             // Output area where match titles are displayed
