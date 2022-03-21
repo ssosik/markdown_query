@@ -6,6 +6,7 @@ use eyre::bail;
 use log::{log_enabled, Level};
 use std::io::{stdout, Write};
 
+use std::collections::HashMap;
 use std::process::Command;
 use syntect::easy::HighlightLines;
 use syntect::highlighting::{Style as hStyle, ThemeSet};
@@ -22,7 +23,6 @@ use tui::{
 };
 use unicode_width::UnicodeWidthStr;
 use xapian_rusty::Database;
-use std::collections::HashMap;
 
 // TODO Add fields for sort expression
 
@@ -54,7 +54,10 @@ struct CursorLocation {
     pane_idx: u8,
 }
 impl CursorLocation {
-    fn x(&mut self, n: i16) {
+    fn x(&mut self, x: i16) {
+        self.x = x
+    }
+    fn incr(&mut self, n: i16) {
         self.x += n
     }
 }
@@ -69,8 +72,22 @@ impl TerminalApp {
     fn new(starting_query: String) -> TerminalApp {
         let input_width = starting_query.width() as i16;
         let mut l = HashMap::new();
-        l.insert(InputAreas::QueryArea, CursorLocation{x: input_width, y: 0, pane_idx: 0});
-        l.insert(InputAreas::FilterArea, CursorLocation{x: 3, y: 5, pane_idx: 1});
+        l.insert(
+            InputAreas::QueryArea,
+            CursorLocation {
+                x: input_width,
+                y: 13,
+                pane_idx: 1,
+            },
+        );
+        l.insert(
+            InputAreas::FilterArea,
+            CursorLocation {
+                x: 7,
+                y: 5,
+                pane_idx: 2,
+            },
+        );
 
         TerminalApp {
             query_input: starting_query,
@@ -129,7 +146,6 @@ impl TerminalApp {
         };
         self.selected_state.select(Some(i));
     }
-
 }
 
 pub fn setup_panic() {
@@ -266,6 +282,9 @@ pub fn query(
                         .borders(Borders::TOP | Borders::LEFT | Borders::RIGHT),
                 );
             f.render_widget(query_input, interactive[1]);
+            let area = InputAreas::QueryArea;
+            let mut loc = app.cursor_locations[&area];
+            loc.x(interactive[1].x as i16 + 1);
 
             // Input area where filters are entered
             let filter_input = Paragraph::new(app.filter_input.as_ref())
@@ -276,13 +295,22 @@ pub fn query(
                         .borders(Borders::TOP | Borders::LEFT | Borders::RIGHT),
                 );
             f.render_widget(filter_input, interactive[2]);
+            let area = InputAreas::QueryArea;
+            let mut loc = app.cursor_locations[&area];
+            loc.x(interactive[2].x as i16 + 1);
 
             // Make the cursor visible and ask tui-rs to put it at the specified
             // coordinates after rendering
             f.set_cursor(
                 // Put cursor past the end of the input text
-                app.cursor_locations[&app.current_input_area].x.try_into().unwrap(),
-                app.cursor_locations[&app.current_input_area].y.try_into().unwrap(),
+                app.cursor_locations[&app.current_input_area]
+                    .x
+                    .try_into()
+                    .unwrap(),
+                app.cursor_locations[&app.current_input_area]
+                    .y
+                    .try_into()
+                    .unwrap(),
             );
 
             if log_enabled!(Level::Debug) {
@@ -353,8 +381,8 @@ pub fn query(
                                 InputAreas::FilterArea => app.filter_input.push(c),
                             };
                             let area = app.current_input_area;
-                            let mut loc  = app.cursor_locations[&area];
-                            loc.x(1);
+                            let mut loc = app.cursor_locations[&area];
+                            loc.incr(1);
                         }
                         Key::Backspace => {
                             // TODO prevent this from going too far back
@@ -363,9 +391,8 @@ pub fn query(
                                 InputAreas::FilterArea => app.filter_input.pop(),
                             };
                             let area = app.current_input_area;
-                            let mut loc  = app.cursor_locations[&area];
-                            loc.x(-1);
-                            //app.cursor_locations[&app.current_input_area].x(-1)
+                            let mut loc = app.cursor_locations[&area];
+                            loc.incr(-1);
                         }
                         Key::Ctrl('e') => {
                             // Temporarily drop the TUI app and event handling while
