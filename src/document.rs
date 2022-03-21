@@ -207,6 +207,14 @@ where
             formatter.write_str("string or list of strings")
         }
 
+        // Value empty, return an empty vec
+        fn visit_unit<E>(self) -> Result<Self::Value, E>
+        where
+            E: de::Error,
+        {
+            Ok(vec![])
+        }
+
         // Value is a single string: return a Vec containing that single string
         fn visit_str<E>(self, value: &str) -> Result<Self::Value, E>
         where
