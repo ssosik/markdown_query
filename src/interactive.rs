@@ -16,7 +16,7 @@ use tempfile::Builder;
 use termion::{event::Key, raw::IntoRawMode, screen::AlternateScreen};
 use tui::{
     backend::CrosstermBackend,
-    layout::{Constraint, Direction, Layout},
+    layout::{Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
     text::{Span, Spans, Text},
     widgets::{Block, Borders, List, ListItem, ListState, Paragraph, Wrap},
@@ -54,8 +54,9 @@ struct CursorLocation {
     pane_idx: u8,
 }
 impl CursorLocation {
-    fn x(&mut self, x: i16) {
-        self.x = x
+    fn set(&mut self, c: Rect) {
+        self.x = c.x as i16 + 1;
+        self.y = c.y as i16 + 1
     }
     fn incr(&mut self, n: i16) {
         self.x += n
@@ -284,7 +285,8 @@ pub fn query(
             f.render_widget(query_input, interactive[1]);
             let area = InputAreas::QueryArea;
             let mut loc = app.cursor_locations[&area];
-            loc.x(interactive[1].x as i16 + 1);
+            //loc.set(interactive[1].x as i16 + 1, interactive[1].y as i16 + 1);
+            loc.set(interactive[1]);
 
             // Input area where filters are entered
             let filter_input = Paragraph::new(app.filter_input.as_ref())
@@ -297,7 +299,8 @@ pub fn query(
             f.render_widget(filter_input, interactive[2]);
             let area = InputAreas::QueryArea;
             let mut loc = app.cursor_locations[&area];
-            loc.x(interactive[2].x as i16 + 1);
+            //loc.set(interactive[2].x as i16 + 1, interactive[2].y as i16 + 1);
+            loc.set(interactive[2]);
 
             // Make the cursor visible and ask tui-rs to put it at the specified
             // coordinates after rendering
