@@ -360,8 +360,7 @@ mod tagged_tests {
 pub enum XapianTag {
     Author,
     Date,
-    Filename,
-    Pathname,
+    Fullpath,
     Title,
     Subtitle,
     Tag,
@@ -372,8 +371,7 @@ impl XapianTag {
         match self {
             XapianTag::Author => "A",
             XapianTag::Date => "D",
-            XapianTag::Filename => "F",
-            XapianTag::Pathname => "P",
+            XapianTag::Fullpath => "U",
             XapianTag::Title => "S",
             XapianTag::Subtitle => "XS",
             XapianTag::Tag => "K",
@@ -382,8 +380,7 @@ impl XapianTag {
     pub fn parse(input: Span) -> IResult<(XapianTag, Span)> {
         separated_pair(
             alt((
-                value(XapianTag::Filename, tag_no_case("filename")),
-                value(XapianTag::Pathname, tag_no_case("pathname")),
+                value(XapianTag::Fullpath, tag_no_case("fullpath")),
                 value(XapianTag::Subtitle, tag_no_case("subtitle")),
                 value(XapianTag::Author, tag_no_case("author")),
                 value(XapianTag::Title, tag_no_case("title")),
@@ -679,7 +676,6 @@ pub fn query_db(
             let mut t: Document = serde_json::from_str(&data)?;
             // TODO don't use clone here
             t.serialization_type = serialization.clone();
-            //println!("Match {}", v.filename);
             matches.push(t);
         }
         v.next()?;

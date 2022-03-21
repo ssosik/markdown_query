@@ -5,7 +5,7 @@ use color_eyre::Report;
 use eyre::bail;
 use log::{log_enabled, Level};
 use std::io::{stdout, Write};
-use std::path::{PathBuf};
+
 use std::process::Command;
 use syntect::easy::HighlightLines;
 use syntect::highlighting::{Style as hStyle, ThemeSet};
@@ -49,13 +49,7 @@ impl TerminalApp {
     pub fn get_selected(&mut self) -> Vec<String> {
         let ret: Vec<String> = Vec::new();
         if let Some(i) = self.selected_state.selected() {
-            let p_ = PathBuf::from(self.matches[i].pathname.clone())
-                .join(self.matches[i].filename.clone());
-            dbg!(p_);
-            let p = PathBuf::from(self.matches[i].pathname.clone())
-                .join(self.matches[i].filename.clone());
-            vec![String::from("foo"), self.matches[i].pathname.clone(), p.to_str().unwrap().to_string()]
-            //vec![self.matches[i].filename.to_owned()]
+            vec![self.matches[i].fullpath.clone()]
         } else {
             ret
         }

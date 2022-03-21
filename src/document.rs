@@ -70,9 +70,7 @@ impl Serialize for VecString {
 pub struct Document {
     /// Inherent metadata about the document
     #[serde(default)]
-    pub filename: String,
-    #[serde(default)]
-    pub pathname: String,
+    pub fullpath: String,
 
     /// Calculated fields
     #[serde(default)]
@@ -145,8 +143,7 @@ impl Document {
                         ));
                     }
                 };
-                doc.filename = String::from(path.file_name().unwrap().to_str().unwrap());
-                doc.pathname = String::from(path.parent().unwrap().to_str().unwrap());
+                doc.fullpath = String::from(full_path);
                 doc.body = content.to_string();
                 if doc.id.width() == 0 {
                     let uuid = UuidB64::new();
@@ -173,8 +170,7 @@ impl Document {
 
         tg.index_text_with_prefix(&self.authors.to_string(), "A")?;
         tg.index_text_with_prefix(&self.date.to_string(), "D")?;
-        tg.index_text_with_prefix(&self.filename, "F")?;
-        tg.index_text_with_prefix(&self.pathname, "P")?;
+        tg.index_text_with_prefix(&self.fullpath, "U")?;
         tg.index_text_with_prefix(&self.title, "S")?;
         tg.index_text_with_prefix(&self.subtitle, "XS")?;
         for tag in &self.tags {
@@ -186,7 +182,7 @@ impl Document {
         // Convert the Document into JSON and set it in the DB for retrieval later
         doc.set_data(&serde_json::to_string(&self).unwrap())?;
 
-        let id = "Q".to_owned() + &self.filename;
+        let id = "Q".to_owned() + &self.fullpath;
         doc.add_boolean_term(&id)?;
         db.replace_document(&id, &mut doc)?;
 
@@ -275,7 +271,7 @@ impl Serialize for Document {
         }
         s.serialize_field("tags", &self.tags)?;
         if self.serialization_type == SerializationType::Storage {
-            s.serialize_field("filename", &self.filename)?;
+            s.serialize_field("fullpath", &self.fullpath)?;
         };
         s.serialize_field("authors", &self.authors)?;
         s.serialize_field("id", &self.id)?;

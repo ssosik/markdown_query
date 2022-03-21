@@ -97,7 +97,7 @@ fn main() -> Result<(), Report> {
                             }
                             if let Ok(doc) = document::Document::parse_file(path) {
                                 doc.update_index(&mut db, &mut tg)?;
-                                debug!("✅ {}", doc.filename);
+                                debug!("✅ {}", path.display());
                             } else {
                                 error!("❌ Failed to load file {}", path.display());
                             }
