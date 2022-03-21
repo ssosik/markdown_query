@@ -20,6 +20,7 @@ use tui::{
     text::{Span, Spans, Text},
     widgets::{Block, Borders, List, ListItem, ListState, Paragraph, Wrap},
 };
+use unicode_width::UnicodeWidthStr;
 use xapian_rusty::Database;
 
 /// TerminalApp holds the state of the application
@@ -91,6 +92,7 @@ impl TerminalApp {
     }
 
     fn new(starting_query: String) -> TerminalApp {
+        let input_width = starting_query.width() as i32;
         TerminalApp {
             query_input: starting_query,
             filter_input: String::new(),
@@ -100,7 +102,7 @@ impl TerminalApp {
             error: String::new(),
             debug: String::new(),
             inp_idx: 0,
-            inp_widths: [0, 0],
+            inp_widths: [input_width, 0],
         }
     }
 }
