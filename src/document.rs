@@ -72,7 +72,7 @@ pub struct Document {
     #[serde(default)]
     pub filename: String,
     #[serde(default)]
-    pub full_path: OsString,
+    pub pathname: String,
 
     /// Calculated fields
     #[serde(default)]
@@ -146,6 +146,7 @@ impl Document {
                     }
                 };
                 doc.filename = String::from(path.file_name().unwrap().to_str().unwrap());
+                doc.pathname = String::from(path.parent().unwrap().to_str().unwrap());
                 doc.body = content.to_string();
                 if doc.id.width() == 0 {
                     let uuid = UuidB64::new();
@@ -173,7 +174,7 @@ impl Document {
         tg.index_text_with_prefix(&self.authors.to_string(), "A")?;
         tg.index_text_with_prefix(&self.date.to_string(), "D")?;
         tg.index_text_with_prefix(&self.filename, "F")?;
-        tg.index_text_with_prefix(&self.full_path.clone().into_string().unwrap(), "F")?;
+        tg.index_text_with_prefix(&self.pathname, "P")?;
         tg.index_text_with_prefix(&self.title, "S")?;
         tg.index_text_with_prefix(&self.subtitle, "XS")?;
         for tag in &self.tags {

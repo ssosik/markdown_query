@@ -4,6 +4,7 @@ use ansi_to_tui::ansi_to_text;
 use color_eyre::Report;
 use eyre::bail;
 use log::{log_enabled, Level};
+use std::path::{Path, PathBuf};
 use std::io::{stdout, Write};
 use std::process::Command;
 use syntect::easy::HighlightLines;
@@ -48,8 +49,9 @@ impl TerminalApp {
     pub fn get_selected(&mut self) -> Vec<String> {
         let ret: Vec<String> = Vec::new();
         if let Some(i) = self.selected_state.selected() {
-            //vec![self.matches[i].full_path.clone().into_string().unwrap()]
-            vec![self.matches[i].filename.to_owned()]
+            let p = PathBuf::from(self.matches[i].pathname.clone()).join(self.matches[i].filename.clone());
+            vec![p.to_str().unwrap().to_string()]
+            //vec![self.matches[i].filename.to_owned()]
         } else {
             ret
         }
