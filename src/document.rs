@@ -6,7 +6,7 @@ use serde::{
 };
 use std::io::{Error, ErrorKind};
 
-use std::{ffi::OsString, fmt, fs, io, marker::PhantomData};
+use std::{fmt, fs, io, marker::PhantomData};
 use unicode_width::UnicodeWidthStr;
 use uuid_b64::UuidB64;
 use xapian_rusty::{Document as XapDoc, TermGenerator, WritableDatabase};
