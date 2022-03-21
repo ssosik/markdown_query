@@ -361,7 +361,7 @@ pub enum XapianTag {
     Author,
     Date,
     Filename,
-    Fullpath,
+    Pathname,
     Title,
     Subtitle,
     Tag,
@@ -373,7 +373,7 @@ impl XapianTag {
             XapianTag::Author => "A",
             XapianTag::Date => "D",
             XapianTag::Filename => "F",
-            XapianTag::Fullpath => "F",
+            XapianTag::Pathname => "P",
             XapianTag::Title => "S",
             XapianTag::Subtitle => "XS",
             XapianTag::Tag => "K",
@@ -383,7 +383,7 @@ impl XapianTag {
         separated_pair(
             alt((
                 value(XapianTag::Filename, tag_no_case("filename")),
-                value(XapianTag::Fullpath, tag_no_case("fullpath")),
+                value(XapianTag::Pathname, tag_no_case("pathname")),
                 value(XapianTag::Subtitle, tag_no_case("subtitle")),
                 value(XapianTag::Author, tag_no_case("author")),
                 value(XapianTag::Title, tag_no_case("title")),
