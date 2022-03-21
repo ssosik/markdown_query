@@ -22,6 +22,9 @@ use tui::{
 };
 use unicode_width::UnicodeWidthStr;
 use xapian_rusty::Database;
+use std::collections::HashMap;
+
+// TODO Add fields for sort expression
 
 /// TerminalApp holds the state of the application
 pub(crate) struct TerminalApp {
@@ -39,13 +42,49 @@ pub(crate) struct TerminalApp {
     pub(crate) error: String,
     /// Display the serialized payload to send to the server
     pub(crate) debug: String,
-    // TODO Add fields for sort expression
-    inp_idx: usize,
-    // Length here should stay in sync with the number of editable areas
-    inp_widths: [i32; 2],
+    // Use to keep cursor locations in sync with the input areas
+    current_input_area: InputAreas,
+    cursor_locations: HashMap<InputAreas, CursorLocation>,
+}
+
+#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
+struct CursorLocation {
+    x: i16,
+    y: i16,
+    pane_idx: u8,
+}
+impl CursorLocation {
+    fn x(&mut self, n: i16) {
+        self.x += n
+    }
+}
+
+#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
+enum InputAreas {
+    QueryArea,
+    FilterArea,
 }
 
 impl TerminalApp {
+    fn new(starting_query: String) -> TerminalApp {
+        let input_width = starting_query.width() as i16;
+        let mut l = HashMap::new();
+        l.insert(InputAreas::QueryArea, CursorLocation{x: input_width, y: 0, pane_idx: 0});
+        l.insert(InputAreas::FilterArea, CursorLocation{x: 3, y: 5, pane_idx: 1});
+
+        TerminalApp {
+            query_input: starting_query,
+            filter_input: String::new(),
+            preview: String::new(),
+            matches: Vec::new(),
+            selected_state: ListState::default(),
+            error: String::new(),
+            debug: String::new(),
+            current_input_area: InputAreas::QueryArea,
+            cursor_locations: l,
+        }
+    }
+
     // TODO make this work for multiple selections
     pub fn get_selected(&mut self) -> Vec<String> {
         let ret: Vec<String> = Vec::new();
@@ -91,20 +130,6 @@ impl TerminalApp {
         self.selected_state.select(Some(i));
     }
 
-    fn new(starting_query: String) -> TerminalApp {
-        let input_width = starting_query.width() as i32;
-        TerminalApp {
-            query_input: starting_query,
-            filter_input: String::new(),
-            preview: String::new(),
-            matches: Vec::new(),
-            selected_state: ListState::default(),
-            error: String::new(),
-            debug: String::new(),
-            inp_idx: 0,
-            inp_widths: [input_width, 0],
-        }
-    }
 }
 
 pub fn setup_panic() {
@@ -256,9 +281,8 @@ pub fn query(
             // coordinates after rendering
             f.set_cursor(
                 // Put cursor past the end of the input text
-                // TODO refactor input area switching
-                interactive[app.inp_idx + 1].x + 1 + app.inp_widths[app.inp_idx] as u16,
-                interactive[app.inp_idx + 1].y + 1,
+                app.cursor_locations[&app.current_input_area].x.try_into().unwrap(),
+                app.cursor_locations[&app.current_input_area].y.try_into().unwrap(),
             );
 
             if log_enabled!(Level::Debug) {
@@ -317,27 +341,31 @@ pub fn query(
                             break;
                         }
                         Key::Left | Key::Right | Key::Char('\t') => {
-                            app.inp_idx = match app.inp_idx {
-                                1 => 0,
-                                _ => 1,
+                            // Flip focus back and forth between our two input areas
+                            app.current_input_area = match app.current_input_area {
+                                InputAreas::QueryArea => InputAreas::FilterArea,
+                                InputAreas::FilterArea => InputAreas::QueryArea,
                             };
                         }
                         Key::Char(c) => {
-                            if app.inp_idx == 0 {
-                                app.query_input.push(c);
-                            } else {
-                                app.filter_input.push(c);
-                            }
-                            app.inp_widths[app.inp_idx] += 1;
+                            match app.current_input_area {
+                                InputAreas::QueryArea => app.query_input.push(c),
+                                InputAreas::FilterArea => app.filter_input.push(c),
+                            };
+                            let area = app.current_input_area;
+                            let mut loc  = app.cursor_locations[&area];
+                            loc.x(1);
                         }
                         Key::Backspace => {
-                            // TODO prevent this from going to far back
-                            if app.inp_idx == 0 {
-                                app.query_input.pop();
-                            } else {
-                                app.filter_input.pop();
-                            }
-                            app.inp_widths[app.inp_idx] -= 1;
+                            // TODO prevent this from going too far back
+                            match app.current_input_area {
+                                InputAreas::QueryArea => app.query_input.pop(),
+                                InputAreas::FilterArea => app.filter_input.pop(),
+                            };
+                            let area = app.current_input_area;
+                            let mut loc  = app.cursor_locations[&area];
+                            loc.x(-1);
+                            //app.cursor_locations[&app.current_input_area].x(-1)
                         }
                         Key::Ctrl('e') => {
                             // Temporarily drop the TUI app and event handling while
