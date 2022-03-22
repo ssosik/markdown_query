@@ -36,7 +36,10 @@ usable.
 
 # Wishlist of TODOs
 
-* [ ] Support Windows, ARM, any other platforms needed
+* [x] fix preview output
+* [ ] use pest for query parsing
+* [x] Colorize preview
+* [ ] Support platforms besides linux, mac
 * [ ] Delete entries from local cache
 * [ ] Query/filter on time range
 * [ ] Vim Plugin
@@ -49,17 +52,17 @@ usable.
 * [ ] Keep track of document access count in KV and use that as a weighting
     factor in query results
 * [ ] Keep track of all Tags to be used for autocompletion
-* [ ] cleanups, refactoring, rust-analyze, clippy and linting
+* [x] cleanups, refactoring, rust-analyze, clippy and linting
 * [ ] Optimize binary and compile times
   * [ ] https://matklad.github.io//2021/09/04/fast-rust-builds.html
   * [ ] https://pingcap.com/blog/rust-compilation-model-calamity
   * [ ] https://doc.rust-lang.org/rustc/profile-guided-optimization.html
 * Prune dependencies: https://pingcap.com/blog/rust-compilation-model-calamity#recent-work-on-rust-compile-times
-* [ ] CLI option for passing in starting query for interactive mode
+* [x] CLI option for passing in starting query for interactive mode
 * [ ] CLI option to emit JSON instead of filename
 * [ ] import man/info pages and other canonical documentation for indexing and IR
 * [ ] Add URL tag, support multiple?
-* [ ] Support multiple Author tags
+* [x] Support multiple Author tags
 * [x] Add tests
 * [x] Query/filter on tags (make sure this is working properly)
 * [x] statically link xapian-core

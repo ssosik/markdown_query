@@ -1,15 +1,14 @@
-use crate::document::Document;
+use crate::document::{Document, SerializationType};
 use color_eyre::Report;
 use eyre::{eyre, Result};
-#[allow(unused)]
 use nom::{
-    bytes::streaming::{is_not, tag, tag_no_case, take_until},
+    bytes::streaming::{tag, tag_no_case, take_until},
     character::complete::multispace1 as complete_multispace1,
-    character::streaming::{alphanumeric0, alphanumeric1, multispace0, multispace1, space0},
-    combinator::{recognize, value},
-    multi::{many0, many1},
-    sequence::{delimited, pair, separated_pair, tuple},
-    {alt, branch::alt, complete, delimited, named, tag, take_until, value}, // {IResult},
+    character::streaming::{alphanumeric1, multispace0, multispace1},
+    combinator::{complete, recognize, value},
+    multi::many1,
+    sequence::{delimited, separated_pair, tuple},
+    {branch::alt, IResult as NomIResult},
 };
 use std::convert::From;
 use std::fmt;
@@ -361,7 +360,6 @@ mod tagged_tests {
 pub enum XapianTag {
     Author,
     Date,
-    Filename,
     Fullpath,
     Title,
     Subtitle,
@@ -373,8 +371,7 @@ impl XapianTag {
         match self {
             XapianTag::Author => "A",
             XapianTag::Date => "D",
-            XapianTag::Filename => "F",
-            XapianTag::Fullpath => "F",
+            XapianTag::Fullpath => "U",
             XapianTag::Title => "S",
             XapianTag::Subtitle => "XS",
             XapianTag::Tag => "K",
@@ -383,7 +380,6 @@ impl XapianTag {
     pub fn parse(input: Span) -> IResult<(XapianTag, Span)> {
         separated_pair(
             alt((
-                value(XapianTag::Filename, tag_no_case("filename")),
                 value(XapianTag::Fullpath, tag_no_case("fullpath")),
                 value(XapianTag::Subtitle, tag_no_case("subtitle")),
                 value(XapianTag::Author, tag_no_case("author")),
@@ -584,6 +580,7 @@ pub fn parse_user_query(mut qstr: &str) -> Result<Query, Report> {
     let mut stem = Stem::new("en")?;
     qp.set_stemmer(&mut stem)?;
 
+    // TODO make these configurable
     let flags = FlagBoolean as i16
         | FlagPhrase as i16
         | FlagLovehate as i16
@@ -613,8 +610,7 @@ pub fn parse_user_query(mut qstr: &str) -> Result<Query, Report> {
         operator = op;
         qstr = *rest;
     } else {
-        // This shouldn't ever happen
-        panic!("Couldn't match leading operator in {}", qstr);
+        unreachable!("Couldn't match leading operator in {}", qstr);
     }
 
     let mut depth = 0;
@@ -646,8 +642,7 @@ pub fn parse_user_query(mut qstr: &str) -> Result<Query, Report> {
             operator = op;
             qstr = *rest;
         } else {
-            // This shouldn't ever happen
-            panic!("Couldn't match leading operator in {}", qstr);
+            unreachable!("Couldn't match leading operator in {}", qstr);
         }
 
         if depth > 50 {
@@ -658,39 +653,12 @@ pub fn parse_user_query(mut qstr: &str) -> Result<Query, Report> {
     Ok(query)
 }
 
-// TODO is there a better way to handle case insensitity here?
-named!(
-    take_up_to_operator,
-    alt!(
-        complete!(take_until!("AND MAYBE"))
-            | complete!(take_until!("and maybe"))
-            | complete!(take_until!("AND NOT"))
-            | complete!(take_until!("and not"))
-            | complete!(take_until!("SYNONYM"))
-            | complete!(take_until!("synonym"))
-            | complete!(take_until!("FILTER"))
-            | complete!(take_until!("filter"))
-            | complete!(take_until!("PHRASE"))
-            | complete!(take_until!("phrase"))
-            | complete!(take_until!("SCALED"))
-            | complete!(take_until!("scaled"))
-            | complete!(take_until!("ELITE"))
-            | complete!(take_until!("elite"))
-            | complete!(take_until!("RANGE"))
-            | complete!(take_until!("range"))
-            | complete!(take_until!("NEAR"))
-            | complete!(take_until!("near"))
-            | complete!(take_until!("AND"))
-            | complete!(take_until!("and"))
-            | complete!(take_until!("XOR"))
-            | complete!(take_until!("xor"))
-            | complete!(take_until!("OR"))
-            | complete!(take_until!("or"))
-    )
-);
-
 //fn query_db(mut db: Database, mut q: Query) -> Result<Vec<Document>, Report> {
-pub fn query_db(mut enq: Enquire, mut q: Query) -> Result<Vec<Document>, Report> {
+pub fn query_db(
+    mut enq: Enquire,
+    mut q: Query,
+    serialization: SerializationType,
+) -> Result<Vec<Document>, Report> {
     enq.set_query(&mut q)?;
     // TODO set this based on terminal height?
     let mut mset = enq.get_mset(0, 100)?;
@@ -705,12 +673,31 @@ pub fn query_db(mut enq: Enquire, mut q: Query) -> Result<Vec<Document>, Report>
         let res = v.get_document_data();
         // Can use flatten() or some other iterators/combinators?
         if let Ok(data) = res {
-            let v: Document = serde_json::from_str(&data)?;
-            //println!("Match {}", v.filename);
-            matches.push(v);
+            let mut t: Document = serde_json::from_str(&data)?;
+            // TODO don't use clone here
+            t.serialization_type = serialization.clone();
+            matches.push(t);
         }
         v.next()?;
     }
 
     Ok(matches)
+}
+
+// TODO How to handle case insensitivity for operators
+fn take_up_to_operator(input: &[u8]) -> NomIResult<&[u8], &[u8]> {
+    alt((
+        complete(take_until("AND MAYBE")),
+        complete(take_until("AND NOT")),
+        complete(take_until("SYNONYM")),
+        complete(take_until("FILTER")),
+        complete(take_until("PHRASE")),
+        complete(take_until("SCALED")),
+        complete(take_until("ELITE")),
+        complete(take_until("RANGE")),
+        complete(take_until("NEAR")),
+        complete(take_until("AND")),
+        complete(take_until("XOR")),
+        complete(take_until("OR")),
+    ))(input)
 }
