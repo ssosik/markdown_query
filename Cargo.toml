@@ -1,33 +1,53 @@
 [package]
-name = "mdq"
-version = "0.2.0"
+name = "markdown_query"
+version = "0.3.0"
 authors = ["Steve Sosik <steve@little-fluffy.cloud>"]
-edition = "2018"
+edition = "2021"
+description = """
+mdq: Markdown+FrontMatter index/query tool
+Use xapian backend to index markdown files containing YAML frontmatter metadata,
+then provide an interactive CLI to query data. Use expressive language for
+querying. Query examples:
+    'foo AND bar AND tag:qux'
+    'foo AND bar AND NOT tag:qux'
+"""
+readme = "README.md"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[[bin]]
+name = "mdq"
+path = "src/main.rs"
+
+[lib]
+name = "markdown_query"
+path = "src/lib.rs"
 
 [dependencies]
-bzip2 = "0.4.3"
-chrono = "0.4"
-clap = "2.33.3"
-color-eyre = "0.5.11"
-dirs = "1.0.4"
-encoding_rs = "0.8.22"
-encoding_rs_io = "0.1.7"
-eyre = "0.6.5"
+chrono = "0.4.19"
+clap = { version = "3.1.6", features = ["derive", "env"] }
+color-eyre = "0.6.1"
+dirs = "4.0.0"
+eyre = "0.6.7"
 frontmatter = "0.4.0"
 glob = "0.3.0"
-indicatif = "0.16.2"
-nom = "6.2.1"
-nom_locate = "3.0.2"
-quick-xml = "0.18.1"
-serde = { version = "1.0.115", features = ["derive"] }
-serde_json = "1.0.57"
-serde_yaml = "0.8.13"
-shellexpand = "1.0.0"
-termion = "1.5"
-tui = "0.15"
-unicode-width = "0.1"
+nom = "7.1.1"
+nom_locate = "4.0.0"
+serde = { version = "1.0.136", features = ["derive"] }
+serde_json = "1.0.79"
+serde_yaml = "0.8.23"
+shellexpand = "2.1.0"
+termion = "1.5.6"
+tui = { version = "0.17.0", features = ["termion"] }
+unicode-width = "0.1.9"
 walkdir = "2.3.2"
 xapian-rusty = { version = "0.1.3", path = "xapian-rusty" }
-yaml-rust = "0.4"
+uuid = { version = "0.8.2", features = ["v4", "serde"] }
+uuid-b64 = "0.1.1"
+yaml-rust = "0.4.5"
+#ansi-to-tui = "0.4.1"
+ansi-to-tui = { git = "https://github.com/uttarayan21/ansi-to-tui", branch = "master" }
+syntect = "4.6.0"
+tempfile = "3.3.0"
+clap-verbosity-flag = "1.0.0"
+env_logger = "0.9.0"
+log = "0.4.14"
