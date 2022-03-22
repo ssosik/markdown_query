@@ -23,6 +23,8 @@ use tui::{
 };
 use unicode_width::UnicodeWidthStr;
 use xapian_rusty::Database;
+use enum_map::{enum_map, Enum, EnumMap};
+
 
 // TODO Add fields for sort expression
 
@@ -42,9 +44,6 @@ pub(crate) struct TerminalApp {
     pub(crate) error: String,
     /// Display the serialized payload to send to the server
     pub(crate) debug: String,
-    // Use to keep cursor locations in sync with the input areas
-    current_input_area: InputAreas,
-    cursor_locations: HashMap<InputAreas, CursorLocation>,
 }
 
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
@@ -63,43 +62,22 @@ impl CursorLocation {
     }
 }
 
-#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, Enum)]
 enum InputAreas {
     QueryArea,
     FilterArea,
 }
 
 impl TerminalApp {
-    fn new(starting_query: String) -> TerminalApp {
-        let input_width = starting_query.width() as i16;
-        let mut l = HashMap::new();
-        l.insert(
-            InputAreas::QueryArea,
-            CursorLocation {
-                x: input_width,
-                y: 13,
-                pane_idx: 1,
-            },
-        );
-        l.insert(
-            InputAreas::FilterArea,
-            CursorLocation {
-                x: 7,
-                y: 5,
-                pane_idx: 2,
-            },
-        );
-
+    fn new() -> TerminalApp {
         TerminalApp {
-            query_input: starting_query,
+            query_input: String::new(),
             filter_input: String::new(),
             preview: String::new(),
             matches: Vec::new(),
             selected_state: ListState::default(),
             error: String::new(),
             debug: String::new(),
-            current_input_area: InputAreas::QueryArea,
-            cursor_locations: l,
         }
     }
 
@@ -190,7 +168,17 @@ pub fn query(
     let mut events = event::Events::new();
 
     // Create default app state
-    let mut app = TerminalApp::new(starting_query);
+    let mut app = TerminalApp::new();
+    let input_width = starting_query.width() as i16;
+    app.query_input = starting_query;
+
+    // Use to keep cursor locations in sync with the input areas
+    let mut current_input_area = InputAreas::QueryArea;
+    //let mut cursor_locations: HashMap<InputAreas, CursorLocation> = HashMap::new();
+    let mut cursor_locations = EnumMap::default();
+    
+    //cursor_locations.insert(InputAreas::QueryArea, CursorLocation {x: input_width, y: 13, pane_idx: 1});
+    //cursor_locations.insert(InputAreas::FilterArea, CursorLocation {x: 7, y: 5, pane_idx: 2});
 
     loop {
         // Draw UI
@@ -283,10 +271,13 @@ pub fn query(
                         .borders(Borders::TOP | Borders::LEFT | Borders::RIGHT),
                 );
             f.render_widget(query_input, interactive[1]);
-            let area = InputAreas::QueryArea;
-            let mut loc = app.cursor_locations[&area];
-            //loc.set(interactive[1].x as i16 + 1, interactive[1].y as i16 + 1);
-            loc.set(interactive[1]);
+            if !cursor_locations.contains_key(&InputAreas::QueryArea) {
+                cursor_locations[&InputAreas::QueryArea] = CursorLocation{
+                    x: interactive[1].x as i16 + 1,
+                    y: interactive[1].y as i16 + 1,
+                    pane_idx: 1,
+                };
+            }
 
             // Input area where filters are entered
             let filter_input = Paragraph::new(app.filter_input.as_ref())
@@ -297,20 +288,25 @@ pub fn query(
                         .borders(Borders::TOP | Borders::LEFT | Borders::RIGHT),
                 );
             f.render_widget(filter_input, interactive[2]);
-            let area = InputAreas::QueryArea;
-            let mut loc = app.cursor_locations[&area];
-            //loc.set(interactive[2].x as i16 + 1, interactive[2].y as i16 + 1);
-            loc.set(interactive[2]);
+            if !cursor_locations.contains_key(&InputAreas::FilterArea) {
+                cursor_locations[&InputAreas::FilterArea] = CursorLocation{
+                    x: interactive[2].x as i16 + 1,
+                    y: interactive[2].y as i16 + 1,
+                    pane_idx: 2,
+                };
+            }
+
+            //let x = cursor_locations.entry
 
             // Make the cursor visible and ask tui-rs to put it at the specified
             // coordinates after rendering
             f.set_cursor(
                 // Put cursor past the end of the input text
-                app.cursor_locations[&app.current_input_area]
+                cursor_locations[&current_input_area]
                     .x
                     .try_into()
                     .unwrap(),
-                app.cursor_locations[&app.current_input_area]
+                cursor_locations[&current_input_area]
                     .y
                     .try_into()
                     .unwrap(),
@@ -373,29 +369,25 @@ pub fn query(
                         }
                         Key::Left | Key::Right | Key::Char('\t') => {
                             // Flip focus back and forth between our two input areas
-                            app.current_input_area = match app.current_input_area {
+                            current_input_area = match current_input_area {
                                 InputAreas::QueryArea => InputAreas::FilterArea,
                                 InputAreas::FilterArea => InputAreas::QueryArea,
                             };
                         }
                         Key::Char(c) => {
-                            match app.current_input_area {
+                            match current_input_area {
                                 InputAreas::QueryArea => app.query_input.push(c),
                                 InputAreas::FilterArea => app.filter_input.push(c),
                             };
-                            let area = app.current_input_area;
-                            let mut loc = app.cursor_locations[&area];
-                            loc.incr(1);
+                            cursor_locations[&current_input_area].incr(1);
                         }
                         Key::Backspace => {
                             // TODO prevent this from going too far back
-                            match app.current_input_area {
+                            match current_input_area {
                                 InputAreas::QueryArea => app.query_input.pop(),
                                 InputAreas::FilterArea => app.filter_input.pop(),
                             };
-                            let area = app.current_input_area;
-                            let mut loc = app.cursor_locations[&area];
-                            loc.incr(-1);
+                            cursor_locations[&current_input_area].incr(-1);
                         }
                         Key::Ctrl('e') => {
                             // Temporarily drop the TUI app and event handling while
