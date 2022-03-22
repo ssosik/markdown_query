@@ -52,7 +52,7 @@ jobs:
     - name: Get package version
       shell: bash
       run: |
-        echo "XQ_VERSION=$(cargo metadata --format-version 1 | jq -r '.packages[] | select(.name =="xq") | .version')" >> $GITHUB_ENV
+        echo "MDQ_VERSION=$(cargo metadata --format-version 1 | jq -r '.packages[] | select(.name =="mdq") | .version')" >> $GITHUB_ENV
 
     - name: Install build dependencies (Ubuntu)
       if: matrix.os == 'ubuntu-latest'
@@ -87,14 +87,14 @@ jobs:
 
     - name: Strip release binary (linux and macos)
       if: matrix.build == 'linux' || matrix.build == 'macos'
-      run: strip "target/${{ matrix.target }}/release/xq"
+      run: strip "target/${{ matrix.target }}/release/mdq"
 
     - name: Build archive
       shell: bash
       run: |
-        staging="xq-${{ env.XQ_VERSION }}-${{ matrix.target }}"
+        staging="mdq-${{ env.MDQ_VERSION }}-${{ matrix.target }}"
         mkdir -p "$staging"
-        cp "target/${{ matrix.target }}/release/xq" "$staging/"
+        cp "target/${{ matrix.target }}/release/mdq" "$staging/"
         tar czf "$staging.tar.gz" "$staging"
         echo "ASSET=$staging.tar.gz" >> $GITHUB_ENV
 
