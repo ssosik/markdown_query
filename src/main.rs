@@ -159,52 +159,46 @@ fn main() -> Result<(), Report> {
             // The text is too long to fit on a line, so the view will wrap lines,
             // and will adapt to the terminal size.
             siv.add_fullscreen_layer(
-                LinearLayout::horizontal()
-                    .child(
-                        LinearLayout::vertical()
-                            .child(
-                                Panel::new(
-                                    LinearLayout::vertical()
-                                        .with_name("chat_inner")
-                                        .full_height()
-                                        .full_width()
-                                        .scrollable()
-                                        .scroll_strategy(ScrollStrategy::StickToBottom),
-                                )
-                                .title("arpchat")
-                                .with_name("chat_panel")
-                                .full_height()
-                                .full_width(),
-                            )
-                            .child(
-                                Panel::new(
-                                    EditView::new()
-                                        .on_submit(move |siv, msg| {
-                                            siv.call_on_name("input", |input: &mut EditView| {
-                                                input.set_content("");
-                                            });
-                                            ui_tx
-                                                .send(UICommand::SendMessage(msg.to_string()))
-                                                .unwrap();
-                                        })
-                                        .with_name("input"),
-                                )
-                                .full_width(),
-                            )
-                            .full_width(),
-                    )
+                LinearLayout::vertical()
                     .child(
                         Panel::new(
                             LinearLayout::vertical()
-                                .with_name("presences")
+                                .with_name("preview_inner")
                                 .full_height()
                                 .full_width()
                                 .scrollable()
                                 .scroll_strategy(ScrollStrategy::StickToBottom),
                         )
-                        .title("online users")
+                        .title("preview")
+                        .with_name("preview_panel")
+                        .fixed_height(20)
+                        .full_width(),
+                    )
+                    .child(
+                        Panel::new(
+                            LinearLayout::vertical()
+                                .with_name("results")
+                                .full_height()
+                                .full_width()
+                                .scrollable()
+                                .scroll_strategy(ScrollStrategy::StickToBottom),
+                        )
+                        .title("query results")
                         .full_height()
-                        .fixed_width(32),
+                        .full_width(),
+                    )
+                    .child(
+                        Panel::new(
+                            EditView::new()
+                                .on_submit(move |siv, msg| {
+                                    siv.call_on_name("input", |input: &mut EditView| {
+                                        input.set_content("");
+                                    });
+                                    ui_tx.send(UICommand::SendMessage(msg.to_string())).unwrap();
+                                })
+                                .with_name("input"),
+                        )
+                        .full_width(),
                     ),
             );
             siv.run();
