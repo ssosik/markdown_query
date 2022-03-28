@@ -741,6 +741,7 @@ dependencies = [
  "clap",
  "clap-verbosity-flag",
  "color-eyre",
+ "crossbeam-channel",
  "cursive",
  "dirs",
  "env_logger",

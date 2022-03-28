@@ -2,19 +2,28 @@ mod interactive;
 use clap::{Parser, Subcommand};
 use clap_verbosity_flag::{InfoLevel, Verbosity};
 use color_eyre::Report;
+use crossbeam_channel::Sender;
+use cursive::traits::{Nameable, Resizable, Scrollable};
+use cursive::view::ScrollStrategy;
+use cursive::views::{EditView, LinearLayout, Panel};
+use cursive::Cursive;
+use cursive::{
+    align::HAlign,
+    event::{EventResult, Key},
+    traits::With,
+    view::scroll::Scroller,
+    views::{Dialog, OnEventView, TextView},
+};
 use log::{debug, error};
 use markdown_query::document;
 use std::ffi::OsStr;
 use walkdir::WalkDir;
 use xapian_rusty::{Database, Stem, TermGenerator, WritableDatabase, BRASS, DB_CREATE_OR_OPEN};
 
-use cursive::{
-    align::HAlign,
-    event::{EventResult, Key},
-    traits::With,
-    view::{scroll::Scroller, Scrollable},
-    views::{Dialog, OnEventView, Panel, TextView},
-};
+pub enum UICommand {
+    UpdateUsername(String),
+    SendMessage(String),
+}
 
 #[derive(Parser, Debug)]
 #[clap(author, version, about)]
@@ -144,40 +153,60 @@ fn main() -> Result<(), Report> {
             // We can quit by pressing q
             siv.add_global_callback('q', |s| s.quit());
 
+            use crossbeam_channel::unbounded;
+            let (ui_tx, ui_rx) = unbounded::<UICommand>();
+
             // The text is too long to fit on a line, so the view will wrap lines,
             // and will adapt to the terminal size.
             siv.add_fullscreen_layer(
-                Dialog::around(Panel::new(
-                    TextView::new(content)
-                        .scrollable()
-                        .wrap_with(OnEventView::new)
-                        .on_pre_event_inner(Key::PageUp, |v, _| {
-                            let scroller = v.get_scroller_mut();
-                            if scroller.can_scroll_up() {
-                                scroller.scroll_up(scroller.last_outer_size().y.saturating_sub(1));
-                            }
-                            Some(EventResult::Consumed(None))
-                        })
-                        .on_pre_event_inner(Key::PageDown, |v, _| {
-                            let scroller = v.get_scroller_mut();
-                            if scroller.can_scroll_down() {
-                                scroller
-                                    .scroll_down(scroller.last_outer_size().y.saturating_sub(1));
-                            }
-                            Some(EventResult::Consumed(None))
-                        }),
-                ))
-                .title("Unicode and wide-character support")
-                // This is the alignment for the button
-                .h_align(HAlign::Center)
-                .button("Quit", |s| s.quit()),
+                LinearLayout::horizontal()
+                    .child(
+                        LinearLayout::vertical()
+                            .child(
+                                Panel::new(
+                                    LinearLayout::vertical()
+                                        .with_name("chat_inner")
+                                        .full_height()
+                                        .full_width()
+                                        .scrollable()
+                                        .scroll_strategy(ScrollStrategy::StickToBottom),
+                                )
+                                .title("arpchat")
+                                .with_name("chat_panel")
+                                .full_height()
+                                .full_width(),
+                            )
+                            .child(
+                                Panel::new(
+                                    EditView::new()
+                                        .on_submit(move |siv, msg| {
+                                            siv.call_on_name("input", |input: &mut EditView| {
+                                                input.set_content("");
+                                            });
+                                            ui_tx
+                                                .send(UICommand::SendMessage(msg.to_string()))
+                                                .unwrap();
+                                        })
+                                        .with_name("input"),
+                                )
+                                .full_width(),
+                            )
+                            .full_width(),
+                    )
+                    .child(
+                        Panel::new(
+                            LinearLayout::vertical()
+                                .with_name("presences")
+                                .full_height()
+                                .full_width()
+                                .scrollable()
+                                .scroll_strategy(ScrollStrategy::StickToBottom),
+                        )
+                        .title("online users")
+                        .full_height()
+                        .fixed_width(32),
+                    ),
             );
-            // Show a popup on top of the view.
-            siv.add_layer(Dialog::info(
-                "Try resizing the terminal!\n(Press 'q' to \
-                 quit when you're done.)",
-            ));
-
             siv.run();
         }
         Some(Subcommands::Query { query }) => {
