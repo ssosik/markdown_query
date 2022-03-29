@@ -9,10 +9,10 @@ use cursive::views::{EditView, LinearLayout, Panel};
 use cursive::Cursive;
 use cursive::{
     align::HAlign,
-    event::{EventResult, Key},
+    event::{Event, EventResult, EventTrigger, Key, MouseEvent},
     traits::With,
     view::scroll::Scroller,
-    views::{Dialog, OnEventView, TextContent, TextView},
+    views::{Dialog, OnEventView, TextArea, TextContent, TextView},
 };
 use log::{debug, error};
 use markdown_query::document;
@@ -167,6 +167,33 @@ fn main() -> Result<(), Report> {
                             TextView::new_with_content(preview_content.clone())
                                 .scrollable()
                                 .wrap_with(OnEventView::new)
+                                .on_pre_event_inner(EventTrigger::mouse(), |v, e| match e {
+                                    &Event::Mouse {
+                                        event: MouseEvent::WheelUp,
+                                        ..
+                                    } => {
+                                        let scroller = v.get_scroller_mut();
+                                        if scroller.can_scroll_up() {
+                                            scroller.scroll_up(
+                                                scroller.last_outer_size().y.saturating_sub(1),
+                                            );
+                                        }
+                                        Some(EventResult::Consumed(None))
+                                    }
+                                    &Event::Mouse {
+                                        event: MouseEvent::WheelDown,
+                                        ..
+                                    } => {
+                                        let scroller = v.get_scroller_mut();
+                                        if scroller.can_scroll_down() {
+                                            scroller.scroll_down(
+                                                scroller.last_outer_size().y.saturating_sub(1),
+                                            );
+                                        }
+                                        Some(EventResult::Consumed(None))
+                                    }
+                                    _ => None,
+                                })
                                 .on_pre_event_inner(Key::PageUp, |v, _| {
                                     let scroller = v.get_scroller_mut();
                                     if scroller.can_scroll_up() {
