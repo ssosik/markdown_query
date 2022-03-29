@@ -12,7 +12,7 @@ use cursive::{
     event::{EventResult, Key},
     traits::With,
     view::scroll::Scroller,
-    views::{Dialog, OnEventView, TextView},
+    views::{Dialog, OnEventView, TextContent, TextView},
 };
 use log::{debug, error};
 use markdown_query::document;
@@ -156,18 +156,35 @@ fn main() -> Result<(), Report> {
             use crossbeam_channel::unbounded;
             let (ui_tx, ui_rx) = unbounded::<UICommand>();
 
+            let mut preview_content = TextContent::new(content);
+
             // The text is too long to fit on a line, so the view will wrap lines,
             // and will adapt to the terminal size.
             siv.add_fullscreen_layer(
                 LinearLayout::vertical()
                     .child(
                         Panel::new(
-                            LinearLayout::vertical()
-                                .with_name("preview_inner")
-                                .full_height()
-                                .full_width()
+                            TextView::new_with_content(preview_content.clone())
                                 .scrollable()
-                                .scroll_strategy(ScrollStrategy::StickToBottom),
+                                .wrap_with(OnEventView::new)
+                                .on_pre_event_inner(Key::PageUp, |v, _| {
+                                    let scroller = v.get_scroller_mut();
+                                    if scroller.can_scroll_up() {
+                                        scroller.scroll_up(
+                                            scroller.last_outer_size().y.saturating_sub(1),
+                                        );
+                                    }
+                                    Some(EventResult::Consumed(None))
+                                })
+                                .on_pre_event_inner(Key::PageDown, |v, _| {
+                                    let scroller = v.get_scroller_mut();
+                                    if scroller.can_scroll_down() {
+                                        scroller.scroll_down(
+                                            scroller.last_outer_size().y.saturating_sub(1),
+                                        );
+                                    }
+                                    Some(EventResult::Consumed(None))
+                                }),
                         )
                         .title("preview")
                         .with_name("preview_panel")
