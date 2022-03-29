@@ -169,24 +169,24 @@ fn main() -> Result<(), Report> {
                                 .wrap_with(OnEventView::new)
                                 .on_pre_event_inner(EventTrigger::mouse(), |v, e| match e {
                                     &Event::Mouse {
-                                        event: MouseEvent::WheelUp,
-                                        ..
-                                    } => {
-                                        let scroller = v.get_scroller_mut();
-                                        if scroller.can_scroll_up() {
-                                            scroller.scroll_up(
-                                                scroller.last_outer_size().y.saturating_sub(1),
-                                            );
-                                        }
-                                        Some(EventResult::Consumed(None))
-                                    }
-                                    &Event::Mouse {
                                         event: MouseEvent::WheelDown,
                                         ..
                                     } => {
                                         let scroller = v.get_scroller_mut();
                                         if scroller.can_scroll_down() {
                                             scroller.scroll_down(
+                                                scroller.last_outer_size().y.saturating_sub(1),
+                                            );
+                                        }
+                                        Some(EventResult::Consumed(None))
+                                    }
+                                    &Event::Mouse {
+                                        event: MouseEvent::WheelUp,
+                                        ..
+                                    } => {
+                                        let scroller = v.get_scroller_mut();
+                                        if scroller.can_scroll_up() {
+                                            scroller.scroll_up(
                                                 scroller.last_outer_size().y.saturating_sub(1),
                                             );
                                         }
